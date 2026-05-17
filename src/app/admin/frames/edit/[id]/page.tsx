@@ -27,6 +27,7 @@ export default function EditFramePage(props: { params: Promise<{ id: string }> }
   const [slots, setSlots] = useState<Slot[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [liveDuration, setLiveDuration] = useState<number>(5);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -64,6 +65,11 @@ export default function EditFramePage(props: { params: Promise<{ id: string }> }
           height: s.height
         }));
         setSlots(loadedSlots);
+        
+        // Load liveDuration from the first slot if available
+        if (data.photo_slots.length > 0 && data.photo_slots[0].liveDuration) {
+          setLiveDuration(data.photo_slots[0].liveDuration);
+        }
       }
       setIsLoading(false);
     };
@@ -176,7 +182,8 @@ export default function EditFramePage(props: { params: Promise<{ id: string }> }
           width: s.width,
           height: s.height,
           rotation: 0,
-          borderRadius: 8
+          borderRadius: 8,
+          liveDuration: liveDuration
         }))
       }).eq('id', frameId);
 
@@ -234,6 +241,24 @@ export default function EditFramePage(props: { params: Promise<{ id: string }> }
                 onChange={handleFileChange}
                 className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-pink-700 hover:file:bg-pink-100"
               />
+            </div>
+
+            <hr className="border-slate-100" />
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">
+                Durasi Live Photo: {liveDuration} Detik
+              </label>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                step="1"
+                value={liveDuration}
+                onChange={(e) => setLiveDuration(Number(e.target.value))}
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-pink-500"
+              />
+              <p className="text-xs text-slate-400 mt-2">Durasi panjang (5+ detik) menghasilkan gerakan yang mulus namun memerlukan koneksi stabil untuk mengunggah GIF yang lebih besar.</p>
             </div>
 
             <hr className="border-slate-100" />
