@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Loader2, Trash2, Plus, RefreshCw } from 'lucide-react';
+import { Loader2, Trash2, Plus, RefreshCw, Edit2 } from 'lucide-react';
 import Link from 'next/link';
 
 type Frame = {
@@ -142,6 +142,13 @@ export default function FramesPage() {
                 <h3 className="font-bold text-lg text-slate-800 mb-1">{frame.name}</h3>
                 <p className="text-slate-500 text-sm mb-4">{frame.photo_slots?.length || 0} Slot Foto</p>
                 <div className="flex gap-2">
+                  <Link 
+                    href={`/admin/frames/edit/${frame.id}`}
+                    className="flex-1 flex items-center justify-center gap-2 py-2 text-slate-600 bg-slate-100 rounded-lg font-medium hover:bg-slate-200 transition-colors"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Edit
+                  </Link>
                   <button 
                     onClick={() => handleDelete(frame)}
                     disabled={deletingId === frame.id}

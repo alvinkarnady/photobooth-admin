@@ -70,13 +70,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             );
           })}
         </nav>
-        <div className="p-4 border-t border-slate-100">
+        <div className="p-4 border-t border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 font-bold">
+              A
+            </div>
+            <div className="hidden lg:block">
+              <p className="text-sm font-bold text-slate-800">Admin Piawai</p>
+              <p className="text-xs text-slate-500">admin@piawai.id</p>
+            </div>
+          </div>
           <button
             onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-slate-600 hover:bg-red-50 hover:text-red-600 transition-colors"
+            title="Logout"
+            className="p-2.5 rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
           >
             <LogOut className="w-5 h-5" />
-            Logout
           </button>
         </div>
       </aside>
