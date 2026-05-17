@@ -11,10 +11,11 @@ export default function AdminLogin() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Get stored credentials, fallback to defaults if not set
-    const storedEmail = localStorage.getItem('admin_email') || 'admin@piawai.id';
-    const storedPassword = localStorage.getItem('admin_password') || 'admin123';
+    const storedEmail =
+      localStorage.getItem("admin_email") || "admin@piawai.id";
+    const storedPassword = localStorage.getItem("admin_password") || "admin123";
 
     if (email === storedEmail && password === storedPassword) {
       localStorage.setItem("photobooth_admin_auth", "true");
@@ -55,7 +56,7 @@ export default function AdminLogin() {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@piawai.id"
+              placeholder="masukkan email"
               className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent text-slate-700 bg-slate-50"
               required
             />
