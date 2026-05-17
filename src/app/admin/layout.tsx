@@ -3,10 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { LayoutDashboard, Image as ImageIcon, LogOut, Loader2, PlusSquare } from 'lucide-react';
+import { LayoutDashboard, Image as ImageIcon, LogOut, Loader2, PlusSquare, Settings } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [adminEmail, setAdminEmail] = useState('admin@piawai.id');
   const router = useRouter();
   const pathname = usePathname();
 
@@ -16,6 +17,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       router.push('/admin/login');
     } else {
       setIsAuthenticated(true);
+      const email = localStorage.getItem('admin_email');
+      if (email) setAdminEmail(email);
     }
   }, [pathname, router]);
 
@@ -40,6 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
     { name: 'Manajemen Frame', href: '/admin/frames', icon: ImageIcon },
     { name: 'Buat Frame Baru', href: '/admin/frames/create', icon: PlusSquare },
+    { name: 'Pengaturan', href: '/admin/settings', icon: Settings },
   ];
 
   return (
@@ -72,12 +76,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
         <div className="p-4 border-t border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 font-bold">
-              A
+            <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 font-bold uppercase">
+              {adminEmail.charAt(0)}
             </div>
             <div className="hidden lg:block">
               <p className="text-sm font-bold text-slate-800">Admin Piawai</p>
-              <p className="text-xs text-slate-500">admin@piawai.id</p>
+              <p className="text-xs text-slate-500 truncate max-w-[120px]">{adminEmail}</p>
             </div>
           </div>
           <button
