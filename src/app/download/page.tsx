@@ -8,10 +8,11 @@ function DownloadContent() {
   const searchParams = useSearchParams();
   const imageUrl = searchParams.get('url');
   const gifUrl = searchParams.get('gif');
+  const liveUrl = searchParams.get('live');
   
   const [isDownloading, setIsDownloading] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [activeTab, setActiveTab] = useState<'photo' | 'gif'>('photo');
+  const [activeTab, setActiveTab] = useState<'photo' | 'gif' | 'live'>('photo');
 
   useEffect(() => {
     setIsClient(true);
@@ -30,7 +31,9 @@ function DownloadContent() {
   const handleDownload = async () => {
     try {
       setIsDownloading(true);
-      const targetUrl = activeTab === 'gif' && gifUrl ? gifUrl : imageUrl;
+      const targetUrl = activeTab === 'live' && liveUrl ? liveUrl 
+                      : activeTab === 'gif' && gifUrl ? gifUrl 
+                      : imageUrl;
       if (!targetUrl) return;
 
       const response = await fetch(targetUrl);
@@ -38,7 +41,7 @@ function DownloadContent() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const ext = activeTab === 'gif' ? 'gif' : 'png';
+      const ext = (activeTab === 'gif' || activeTab === 'live') ? 'gif' : 'png';
       a.download = `Piawai_Photobooth_${new Date().getTime()}.${ext}`;
       document.body.appendChild(a);
       a.click();
@@ -62,7 +65,9 @@ function DownloadContent() {
         });
       } else {
         // Fallback: Copy to clipboard
-        const shareUrl = activeTab === 'gif' && gifUrl ? gifUrl : imageUrl;
+        const shareUrl = activeTab === 'live' && liveUrl ? liveUrl 
+                       : activeTab === 'gif' && gifUrl ? gifUrl 
+                       : imageUrl;
         if (shareUrl) await navigator.clipboard.writeText(shareUrl);
         alert('Tautan berhasil disalin ke clipboard!');
       }
@@ -92,11 +97,11 @@ function DownloadContent() {
           <p className="text-slate-500 font-medium">Yeay! Ini dia momen seru kamu 🎉</p>
         </div>
 
-        {gifUrl && (
-          <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-6 w-full max-w-[200px] shadow-inner">
+        {(gifUrl || liveUrl) && (
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-6 w-full max-w-sm shadow-inner overflow-x-auto">
             <button
               onClick={() => setActiveTab('photo')}
-              className={`flex-1 py-2 text-sm font-bold rounded-xl transition-all ${
+              className={`flex-1 min-w-[80px] py-2 text-sm font-bold rounded-xl transition-all ${
                 activeTab === 'photo' 
                   ? 'bg-white text-pink-600 shadow-sm' 
                   : 'text-slate-500 hover:text-slate-700'
@@ -104,16 +109,30 @@ function DownloadContent() {
             >
               Foto
             </button>
-            <button
-              onClick={() => setActiveTab('gif')}
-              className={`flex-1 py-2 text-sm font-bold rounded-xl transition-all ${
-                activeTab === 'gif' 
-                  ? 'bg-white text-pink-600 shadow-sm' 
-                  : 'text-slate-500 hover:text-slate-700'
-              }`}
-            >
-              GIF
-            </button>
+            {gifUrl && (
+              <button
+                onClick={() => setActiveTab('gif')}
+                className={`flex-1 min-w-[80px] py-2 text-sm font-bold rounded-xl transition-all ${
+                  activeTab === 'gif' 
+                    ? 'bg-white text-pink-600 shadow-sm' 
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Mentahan
+              </button>
+            )}
+            {liveUrl && (
+              <button
+                onClick={() => setActiveTab('live')}
+                className={`flex-1 min-w-[100px] py-2 text-sm font-bold rounded-xl transition-all ${
+                  activeTab === 'live' 
+                    ? 'bg-gradient-to-r from-pink-500 to-violet-500 text-white shadow-md' 
+                    : 'text-slate-500 hover:text-slate-700'
+                }`}
+              >
+                Live Photo
+              </button>
+            )}
           </div>
         )}
 
@@ -128,10 +147,16 @@ function DownloadContent() {
                 className="object-contain transition-transform duration-700 group-hover:scale-105"
                 priority
               />
-            ) : (
+            ) : activeTab === 'gif' ? (
               <img 
                 src={gifUrl!} 
-                alt="Photobooth GIF" 
+                alt="Photobooth GIF Raw" 
+                className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
+              />
+            ) : (
+              <img 
+                src={liveUrl!} 
+                alt="Photobooth Live Photo" 
                 className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
               />
             )}
@@ -154,7 +179,7 @@ function DownloadContent() {
             ) : (
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
             )}
-            {isDownloading ? 'Menyimpan...' : `Simpan ${activeTab === 'gif' ? 'GIF' : 'Foto'} ke Galeri`}
+            {isDownloading ? 'Menyimpan...' : `Simpan ${activeTab === 'live' ? 'Live Photo' : activeTab === 'gif' ? 'Mentahan GIF' : 'Foto'} ke Galeri`}
           </button>
 
           <button
