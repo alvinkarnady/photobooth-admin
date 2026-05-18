@@ -9,7 +9,8 @@ export async function GET(req: NextRequest) {
   const count = parseInt(searchParams.get('count') || '0');
   const type = searchParams.get('type') || 'burst'; // 'burst' or 'live'
   const targetWidth = parseInt(searchParams.get('width') || '720');
-  const delay = parseInt(searchParams.get('delay') || type === 'live' ? '150' : '400');
+  const delayParam = searchParams.get('delay');
+  const delay = parseInt(delayParam ? delayParam : (type === 'live' ? '150' : '400'));
 
   if (!session || count === 0) {
     return NextResponse.json({ error: 'Missing session or count' }, { status: 400 });

@@ -1,28 +1,39 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter, usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { LayoutDashboard, Image as ImageIcon, LogOut, Loader2, PlusSquare, Settings } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useRouter, usePathname } from "next/navigation";
+import Link from "next/link";
+import {
+  LayoutDashboard,
+  Image as ImageIcon,
+  LogOut,
+  Loader2,
+  PlusSquare,
+  Settings,
+} from "lucide-react";
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default function AdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [adminEmail, setAdminEmail] = useState('admin@piawai.id');
+  const [adminEmail, setAdminEmail] = useState("admin@piawai.id");
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    const auth = localStorage.getItem('photobooth_admin_auth');
-    if (auth !== 'true' && pathname !== '/admin/login') {
-      router.push('/admin/login');
+    const auth = localStorage.getItem("photobooth_admin_auth");
+    if (auth !== "true" && pathname !== "/admin/login") {
+      router.push("/admin/login");
     } else {
       setIsAuthenticated(true);
-      const email = localStorage.getItem('admin_email');
+      const email = localStorage.getItem("admin_email");
       if (email) setAdminEmail(email);
     }
   }, [pathname, router]);
 
-  if (pathname === '/admin/login') {
+  if (pathname === "/admin/login") {
     return <>{children}</>;
   }
 
@@ -35,15 +46,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   const handleLogout = () => {
-    localStorage.removeItem('photobooth_admin_auth');
-    router.push('/admin/login');
+    localStorage.removeItem("photobooth_admin_auth");
+    router.push("/admin/login");
   };
 
   const navItems = [
-    { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
-    { name: 'Manajemen Frame', href: '/admin/frames', icon: ImageIcon },
-    { name: 'Buat Frame Baru', href: '/admin/frames/create', icon: PlusSquare },
-    { name: 'Pengaturan', href: '/admin/settings', icon: Settings },
+    { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { name: "Manajemen Frame", href: "/admin/frames", icon: ImageIcon },
+    { name: "Buat Frame Baru", href: "/admin/frames/create", icon: PlusSquare },
+    { name: "Pengaturan", href: "/admin/settings", icon: Settings },
   ];
 
   return (
@@ -57,15 +68,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
         <nav className="flex-1 p-4 space-y-2">
           {navItems.map((item) => {
-            const isActive = pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href));
+            const isActive =
+              pathname === item.href ||
+              (item.href !== "/admin" && pathname.startsWith(item.href));
             return (
               <Link
                 key={item.name}
                 href={item.href}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
                   isActive
-                    ? 'bg-pink-50 text-pink-600 font-semibold'
-                    : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                    ? "bg-pink-50 text-pink-600 font-semibold"
+                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -80,8 +93,10 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               {adminEmail.charAt(0)}
             </div>
             <div className="hidden lg:block">
-              <p className="text-sm font-bold text-slate-800">Admin Piawai</p>
-              <p className="text-xs text-slate-500 truncate max-w-[120px]">{adminEmail}</p>
+              <p className="text-sm font-bold text-slate-800">Admin</p>
+              <p className="text-xs text-slate-500 truncate max-w-[120px]">
+                {adminEmail}
+              </p>
             </div>
           </div>
           <button
@@ -104,9 +119,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </button>
         </header>
 
-        <div className="flex-1 overflow-auto p-6 md:p-10">
-          {children}
-        </div>
+        <div className="flex-1 overflow-auto p-6 md:p-10">{children}</div>
       </main>
     </div>
   );

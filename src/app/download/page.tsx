@@ -11,6 +11,7 @@ function DownloadContent() {
   const session = searchParams.get('session');
   const burstsCount = parseInt(searchParams.get('bursts') || '0');
   const livesCount = parseInt(searchParams.get('lives') || '0');
+  const liveDelay = parseInt(searchParams.get('liveDelay') || '150');
 
   // Legacy support: direct URL params
   const legacyUrl = searchParams.get('url');
@@ -44,10 +45,11 @@ function DownloadContent() {
 
     const setter = type === 'burst' ? setIsGeneratingGif : setIsGeneratingLive;
     const blobSetter = type === 'burst' ? setGifBlobUrl : setLiveBlobUrl;
+    const delay = type === 'burst' ? 400 : liveDelay;
 
     setter(true);
     try {
-      const apiUrl = `/api/generate-gif?session=${session}&type=${type}&count=${count}&width=720`;
+      const apiUrl = `/api/generate-gif?session=${session}&type=${type}&count=${count}&width=720&delay=${delay}`;
       const response = await fetch(apiUrl);
       if (!response.ok) throw new Error('GIF generation failed');
 
