@@ -53,23 +53,24 @@ export async function GET(req: NextRequest) {
     const frameHeight = frameDataList[0].info.height;
     const channels = frameDataList[0].info.channels;
 
-    // 3. Stack all frames vertically into one tall raw buffer
-    //    Sharp interprets this as multiple "pages" for animated output
-    const stackedBuffer = Buffer.concat(frameDataList.map(f => f.data));
+    // 3. Create animated GIF using gifenc
+    const { GIFEncoder, quantize, applyPalette } = require('gifenc');
+    const gif = GIFEncoder();
 
-    // 4. Create animated GIF using sharp
-    const gifBuffer = await sharp(stackedBuffer, {
-      raw: {
-        width: frameWidth,
-        height: frameHeight * frameDataList.length,
-        channels: channels,
-      },
-    })
-      .gif({
-        delay: frameDataList.map(() => delay),
-        loop: 0, // Infinite loop
-      })
-      .toBuffer();
+    for (let i = 0; i < frameDataList.length; i++) {
+      const frame = frameDataList[i];
+      const palette = quantize(frame.data, 256);
+      const index = applyPalette(frame.data, palette);
+      // repeat: 0 means infinite loop
+      gif.writeFrame(index, frameWidth, frameHeight, { 
+        palette, 
+        delay, 
+        repeat: 0 
+      });
+    }
+
+    gif.finish();
+    const gifBuffer = gif.bytes();
 
     // 5. Return the GIF with proper headers
     return new NextResponse(new Uint8Array(gifBuffer), {
