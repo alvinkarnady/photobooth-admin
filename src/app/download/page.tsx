@@ -1,22 +1,78 @@
 'use client';
 
-import { Suspense, useEffect, useState } from 'react';
+import { Suspense, useEffect, useState, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 
 function DownloadContent() {
   const searchParams = useSearchParams();
-  const imageUrl = searchParams.get('url');
-  const gifUrl = searchParams.get('gif');
-  const liveUrl = searchParams.get('live');
-  
+
+  // New session-based params
+  const session = searchParams.get('session');
+  const burstsCount = parseInt(searchParams.get('bursts') || '0');
+  const livesCount = parseInt(searchParams.get('lives') || '0');
+
+  // Legacy support: direct URL params
+  const legacyUrl = searchParams.get('url');
+  const legacyGif = searchParams.get('gif');
+  const legacyLive = searchParams.get('live');
+
   const [isDownloading, setIsDownloading] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [activeTab, setActiveTab] = useState<'photo' | 'gif' | 'live'>('photo');
+  const [gifBlobUrl, setGifBlobUrl] = useState<string | null>(null);
+  const [liveBlobUrl, setLiveBlobUrl] = useState<string | null>(null);
+  const [isGeneratingGif, setIsGeneratingGif] = useState(false);
+  const [isGeneratingLive, setIsGeneratingLive] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Construct photo URL from session
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const imageUrl = session
+    ? `${supabaseUrl}/storage/v1/object/public/photos/${session}/photo.png`
+    : legacyUrl;
+
+  // Generate GIF on-demand when user switches to GIF/Live tab
+  const generateGif = useCallback(async (type: 'burst' | 'live') => {
+    if (!session) return;
+
+    const count = type === 'burst' ? burstsCount : livesCount;
+    if (count === 0) return;
+
+    const setter = type === 'burst' ? setIsGeneratingGif : setIsGeneratingLive;
+    const blobSetter = type === 'burst' ? setGifBlobUrl : setLiveBlobUrl;
+
+    setter(true);
+    try {
+      const apiUrl = `/api/generate-gif?session=${session}&type=${type}&count=${count}&width=720`;
+      const response = await fetch(apiUrl);
+      if (!response.ok) throw new Error('GIF generation failed');
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      blobSetter(url);
+    } catch (error) {
+      console.error('Error generating GIF:', error);
+      alert('Gagal membuat GIF. Silakan coba lagi.');
+    } finally {
+      setter(false);
+    }
+  }, [session, burstsCount, livesCount]);
+
+  // Trigger GIF generation when tab changes
+  useEffect(() => {
+    if (!session) return; // Legacy mode, don't auto-generate
+
+    if (activeTab === 'gif' && !gifBlobUrl && !isGeneratingGif && burstsCount > 0) {
+      generateGif('burst');
+    }
+    if (activeTab === 'live' && !liveBlobUrl && !isGeneratingLive && livesCount > 0) {
+      generateGif('live');
+    }
+  }, [activeTab, session, gifBlobUrl, liveBlobUrl, isGeneratingGif, isGeneratingLive, burstsCount, livesCount, generateGif]);
 
   if (!isClient) return null;
 
@@ -28,20 +84,39 @@ function DownloadContent() {
     );
   }
 
+  // Determine current display URL based on active tab
+  const currentGifUrl = session ? gifBlobUrl : legacyGif;
+  const currentLiveUrl = session ? liveBlobUrl : legacyLive;
+  const hasGif = session ? burstsCount > 0 : !!legacyGif;
+  const hasLive = session ? livesCount > 0 : !!legacyLive;
+
   const handleDownload = async () => {
     try {
       setIsDownloading(true);
-      const targetUrl = activeTab === 'live' && liveUrl ? liveUrl 
-                      : activeTab === 'gif' && gifUrl ? gifUrl 
-                      : imageUrl;
-      if (!targetUrl) return;
+      let targetUrl: string | null = null;
+      let ext = 'png';
+
+      if (activeTab === 'live') {
+        targetUrl = currentLiveUrl;
+        ext = 'gif';
+      } else if (activeTab === 'gif') {
+        targetUrl = currentGifUrl;
+        ext = 'gif';
+      } else {
+        targetUrl = imageUrl;
+        ext = 'png';
+      }
+
+      if (!targetUrl) {
+        alert('File belum siap. Tunggu sebentar.');
+        return;
+      }
 
       const response = await fetch(targetUrl);
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      const ext = (activeTab === 'gif' || activeTab === 'live') ? 'gif' : 'png';
       a.download = `Piawai_Photobooth_${new Date().getTime()}.${ext}`;
       document.body.appendChild(a);
       a.click();
@@ -64,17 +139,17 @@ function DownloadContent() {
           url: imageUrl,
         });
       } else {
-        // Fallback: Copy to clipboard
-        const shareUrl = activeTab === 'live' && liveUrl ? liveUrl 
-                       : activeTab === 'gif' && gifUrl ? gifUrl 
-                       : imageUrl;
-        if (shareUrl) await navigator.clipboard.writeText(shareUrl);
+        if (imageUrl) await navigator.clipboard.writeText(imageUrl);
         alert('Tautan berhasil disalin ke clipboard!');
       }
     } catch (error) {
       console.log('Error sharing:', error);
     }
   };
+
+  const isCurrentTabLoading = 
+    (activeTab === 'gif' && isGeneratingGif) || 
+    (activeTab === 'live' && isGeneratingLive);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-pink-50 via-white to-sky-50 flex flex-col items-center justify-center text-slate-800 p-6 relative overflow-hidden font-sans">
@@ -97,7 +172,7 @@ function DownloadContent() {
           <p className="text-slate-500 font-medium">Yeay! Ini dia momen seru kamu 🎉</p>
         </div>
 
-        {(gifUrl || liveUrl) && (
+        {(hasGif || hasLive) && (
           <div className="flex bg-slate-100 p-1.5 rounded-2xl mb-6 w-full max-w-sm shadow-inner overflow-x-auto">
             <button
               onClick={() => setActiveTab('photo')}
@@ -109,7 +184,7 @@ function DownloadContent() {
             >
               Foto
             </button>
-            {gifUrl && (
+            {hasGif && (
               <button
                 onClick={() => setActiveTab('gif')}
                 className={`flex-1 min-w-[80px] py-2 text-sm font-bold rounded-xl transition-all ${
@@ -121,7 +196,7 @@ function DownloadContent() {
                 Mentahan
               </button>
             )}
-            {liveUrl && (
+            {hasLive && (
               <button
                 onClick={() => setActiveTab('live')}
                 className={`flex-1 min-w-[100px] py-2 text-sm font-bold rounded-xl transition-all ${
@@ -139,7 +214,15 @@ function DownloadContent() {
         {/* Photo/GIF Container */}
         <div className="relative w-full rounded-[2rem] overflow-hidden shadow-[0_20px_50px_-12px_rgba(236,72,153,0.3)] border-4 border-white mb-10 bg-white p-3 group transform transition-all duration-300 hover:-translate-y-2">
           <div className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden bg-slate-100">
-            {activeTab === 'photo' ? (
+            {isCurrentTabLoading ? (
+              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-pink-50 to-violet-50">
+                <div className="w-16 h-16 border-4 border-pink-200 border-t-pink-500 rounded-full animate-spin mb-4" />
+                <p className="text-pink-500 font-bold text-lg animate-pulse">
+                  Membuat {activeTab === 'live' ? 'Live Photo' : 'GIF'}...
+                </p>
+                <p className="text-slate-400 text-sm mt-2">Server sedang memproses 🚀</p>
+              </div>
+            ) : activeTab === 'photo' ? (
               <Image 
                 src={imageUrl} 
                 alt="Photobooth Result" 
@@ -147,18 +230,22 @@ function DownloadContent() {
                 className="object-contain transition-transform duration-700 group-hover:scale-105"
                 priority
               />
-            ) : activeTab === 'gif' ? (
+            ) : activeTab === 'gif' && currentGifUrl ? (
               <img 
-                src={gifUrl!} 
+                src={currentGifUrl} 
                 alt="Photobooth GIF Raw" 
                 className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
               />
-            ) : (
+            ) : activeTab === 'live' && currentLiveUrl ? (
               <img 
-                src={liveUrl!} 
+                src={currentLiveUrl} 
                 alt="Photobooth Live Photo" 
                 className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-105"
               />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <p className="text-slate-400">Tidak tersedia</p>
+              </div>
             )}
           </div>
           <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-gradient-to-tr from-pink-400 to-orange-400 rounded-full blur-2xl opacity-50 group-hover:opacity-80 transition-opacity duration-500" />
@@ -168,7 +255,7 @@ function DownloadContent() {
         <div className="w-full flex flex-col gap-4 mb-10">
           <button
             onClick={handleDownload}
-            disabled={isDownloading}
+            disabled={isDownloading || isCurrentTabLoading}
             className="w-full py-4 px-6 bg-gradient-to-r from-pink-500 to-violet-500 text-white font-bold rounded-2xl flex items-center justify-center gap-3 hover:from-pink-600 hover:to-violet-600 transition-all shadow-lg hover:shadow-pink-500/30 active:scale-95 disabled:opacity-70 disabled:active:scale-100"
           >
             {isDownloading ? (
