@@ -10,6 +10,7 @@ import {
   Loader2,
   PlusSquare,
   Settings,
+  Download,
 } from "lucide-react";
 
 export default function AdminLayout({
@@ -54,6 +55,7 @@ export default function AdminLayout({
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Manajemen Frame", href: "/admin/frames", icon: ImageIcon },
     { name: "Buat Frame Baru", href: "/admin/frames/create", icon: PlusSquare },
+    { name: "Manajemen Download", href: "/admin/downloads", icon: Download },
     { name: "Pengaturan", href: "/admin/settings", icon: Settings },
   ];
 
@@ -63,7 +65,7 @@ export default function AdminLayout({
       <aside className="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex">
         <div className="p-6 border-b border-slate-100">
           <h1 className="text-xl font-bold bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent">
-            Piawai Admin
+            Admin
           </h1>
         </div>
         <nav className="flex-1 p-4 space-y-2">
@@ -113,7 +115,7 @@ export default function AdminLayout({
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Mobile Header */}
         <header className="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center">
-          <h1 className="text-lg font-bold text-slate-800">Piawai Admin</h1>
+          <h1 className="text-lg font-bold text-slate-800">Admin</h1>
           <button onClick={handleLogout} className="text-slate-500">
             <LogOut className="w-5 h-5" />
           </button>
