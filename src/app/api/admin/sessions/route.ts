@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Use service-level or anon key for storage operations
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function GET() {
   try {
-    // List all folders (sessions) in the photos bucket
-    const { data: folders, error } = await supabase.storage
+    // List all items in the photos bucket root
+    const { data: allItems, error } = await supabase.storage
       .from('photos')
       .list('', {
         limit: 1000,
@@ -21,25 +20,21 @@ export async function GET() {
       return NextResponse.json({ error: 'Failed to list sessions' }, { status: 500 });
     }
 
-    // Filter out non-folder items (actual session folders)
-    // Supabase storage list returns both files and folders
-    // Folders have id = null in some cases, or we detect by metadata
-    const sessionFolders = (folders || []).filter(
-      (item) => item.id === null || !item.metadata
-    );
+    const items = allItems || [];
 
-    // For each session folder, get its contents
-    const sessions = await Promise.all(
-      sessionFolders.map(async (folder) => {
+    // Separate folders (new format) from files (old format)
+    const folders = items.filter((item) => item.id === null && !item.metadata);
+    const rootFiles = items.filter((item) => item.id !== null && item.metadata);
+
+    // ---- Handle NEW format: folder-based sessions (e.g., {sessionId}/photo.png) ----
+    const folderSessions = await Promise.all(
+      folders.map(async (folder) => {
         const { data: files, error: filesError } = await supabase.storage
           .from('photos')
           .list(folder.name, { limit: 100 });
 
-        if (filesError || !files) {
-          return null;
-        }
+        if (filesError || !files || files.length === 0) return null;
 
-        // Count file types
         const photoFile = files.find((f) => f.name === 'photo.png');
         const burstFiles = files.filter((f) => f.name.startsWith('burst_'));
         const liveFiles = files.filter((f) => f.name.startsWith('live_'));
@@ -47,11 +42,8 @@ export async function GET() {
           (acc, f) => acc + (f.metadata?.size || 0),
           0
         );
-
-        // Get created_at from the photo file or first file
         const createdAt =
           photoFile?.created_at || files[0]?.created_at || folder.created_at;
-
         const photoUrl = photoFile
           ? `${supabaseUrl}/storage/v1/object/public/photos/${folder.name}/photo.png`
           : null;
@@ -64,20 +56,74 @@ export async function GET() {
           liveCount: liveFiles.length,
           totalSize,
           createdAt,
+          format: 'folder' as const,
         };
       })
     );
 
-    // Filter out nulls and sort by createdAt descending
-    const validSessions = sessions
-      .filter(Boolean)
-      .sort((a, b) => {
-        const dateA = new Date(a!.createdAt || 0).getTime();
-        const dateB = new Date(b!.createdAt || 0).getTime();
-        return dateB - dateA;
-      });
+    // ---- Handle OLD format: flat files at root (e.g., photo_123.png, live_123.gif) ----
+    // Group root files by their timestamp suffix
+    const oldSessionsMap = new Map<
+      string,
+      { photos: typeof rootFiles; lives: typeof rootFiles; raws: typeof rootFiles }
+    >();
 
-    return NextResponse.json({ sessions: validSessions });
+    for (const file of rootFiles) {
+      // Match patterns: photo_TIMESTAMP.png, live_TIMESTAMP.gif, raw_TIMESTAMP.gif
+      const photoMatch = file.name.match(/^photo_(\d+)\.(png|gif)$/);
+      const liveMatch = file.name.match(/^live_(\d+)\.(gif|png)$/);
+      const rawMatch = file.name.match(/^raw_(\d+)\.(gif|png)$/);
+
+      const timestamp = photoMatch?.[1] || liveMatch?.[1] || rawMatch?.[1];
+      if (!timestamp) continue;
+
+      if (!oldSessionsMap.has(timestamp)) {
+        oldSessionsMap.set(timestamp, { photos: [], lives: [], raws: [] });
+      }
+      const group = oldSessionsMap.get(timestamp)!;
+
+      if (photoMatch) group.photos.push(file);
+      else if (liveMatch) group.lives.push(file);
+      else if (rawMatch) group.raws.push(file);
+    }
+
+    const oldSessions = Array.from(oldSessionsMap.entries()).map(
+      ([timestamp, group]) => {
+        const allFiles = [...group.photos, ...group.lives, ...group.raws];
+        const totalSize = allFiles.reduce(
+          (acc, f) => acc + (f.metadata?.size || 0),
+          0
+        );
+        const pngFile = group.photos.find((f) => f.name.endsWith('.png'));
+        const createdAt = pngFile?.created_at || allFiles[0]?.created_at;
+        const photoUrl = pngFile
+          ? `${supabaseUrl}/storage/v1/object/public/photos/${pngFile.name}`
+          : null;
+
+        return {
+          id: `legacy_${timestamp}`,
+          photoUrl,
+          fileCount: allFiles.length,
+          burstCount: group.raws.length,
+          liveCount: group.lives.length,
+          totalSize,
+          createdAt,
+          format: 'legacy' as const,
+        };
+      }
+    );
+
+    // Combine both formats
+    const allSessions = [
+      ...folderSessions.filter(Boolean),
+      ...oldSessions,
+    ].sort((a, b) => {
+      const dateA = new Date(a!.createdAt || 0).getTime();
+      const dateB = new Date(b!.createdAt || 0).getTime();
+      return dateB - dateA;
+    });
+
+    return NextResponse.json({ sessions: allSessions });
   } catch (error) {
     console.error('Sessions API error:', error);
     return NextResponse.json(
@@ -103,29 +149,51 @@ export async function DELETE(req: NextRequest) {
 
     for (const sessionId of sessionIds) {
       try {
-        // List all files in the session folder
-        const { data: files, error: listError } = await supabase.storage
-          .from('photos')
-          .list(sessionId, { limit: 100 });
+        if (sessionId.startsWith('legacy_')) {
+          // ---- OLD FORMAT: delete flat files from root ----
+          const timestamp = sessionId.replace('legacy_', '');
+          const filesToDelete = [
+            `photo_${timestamp}.png`,
+            `photo_${timestamp}.gif`,
+            `live_${timestamp}.gif`,
+            `live_${timestamp}.png`,
+            `raw_${timestamp}.gif`,
+            `raw_${timestamp}.png`,
+          ];
 
-        if (listError) {
-          errors.push(`Failed to list files for ${sessionId}: ${listError.message}`);
-          continue;
-        }
-
-        if (files && files.length > 0) {
-          const filePaths = files.map((f) => `${sessionId}/${f.name}`);
-          const { error: deleteError } = await supabase.storage
+          const { data, error: deleteError } = await supabase.storage
             .from('photos')
-            .remove(filePaths);
+            .remove(filesToDelete);
 
           if (deleteError) {
-            errors.push(`Failed to delete files for ${sessionId}: ${deleteError.message}`);
+            errors.push(`Failed to delete legacy ${timestamp}: ${deleteError.message}`);
             continue;
           }
-        }
+          deletedCount++;
+        } else {
+          // ---- NEW FORMAT: delete folder contents ----
+          const { data: files, error: listError } = await supabase.storage
+            .from('photos')
+            .list(sessionId, { limit: 200 });
 
-        deletedCount++;
+          if (listError) {
+            errors.push(`Failed to list files for ${sessionId}: ${listError.message}`);
+            continue;
+          }
+
+          if (files && files.length > 0) {
+            const filePaths = files.map((f) => `${sessionId}/${f.name}`);
+            const { data, error: deleteError } = await supabase.storage
+              .from('photos')
+              .remove(filePaths);
+
+            if (deleteError) {
+              errors.push(`Failed to delete files for ${sessionId}: ${deleteError.message}`);
+              continue;
+            }
+          }
+          deletedCount++;
+        }
       } catch (err) {
         errors.push(`Error processing ${sessionId}: ${String(err)}`);
       }
@@ -133,6 +201,7 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({
       deletedCount,
+      totalRequested: sessionIds.length,
       errors: errors.length > 0 ? errors : undefined,
     });
   } catch (error) {

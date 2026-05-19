@@ -142,15 +142,16 @@ export default function DownloadsPage() {
       });
       const data = await res.json();
 
-      if (data.deletedCount > 0) {
-        setSessions((prev) => prev.filter((s) => !ids.includes(s.id)));
-        setSelectedIds(new Set());
-      }
-
       if (data.errors && data.errors.length > 0) {
         console.error('Some deletions failed:', data.errors);
-        alert(`${data.deletedCount} sesi dihapus, ${data.errors.length} gagal.`);
+        alert(`${data.deletedCount}/${data.totalRequested} sesi dihapus. ${data.errors.length} gagal.`);
+      } else if (data.deletedCount > 0) {
+        // Show brief success feedback
       }
+
+      // Always re-fetch from server to stay in sync with actual storage
+      setSelectedIds(new Set());
+      await fetchSessions();
     } catch (error) {
       console.error('Delete error:', error);
       alert('Gagal menghapus sesi.');
