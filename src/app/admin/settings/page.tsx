@@ -4,6 +4,14 @@ import { useState, useEffect } from 'react';
 import { Save, User, Lock, Loader2, CheckCircle, Camera } from 'lucide-react';
 import { getSupabaseBrowserClient } from '@/lib/supabase';
 
+interface CameraSettings {
+  id: number;
+  enable_mirror: boolean;
+  enable_wide_lens: boolean;
+  enable_switch_camera: boolean;
+  enable_flash: boolean;
+}
+
 export default function SettingsPage() {
   const [email, setEmail] = useState('');
   const [currentEmail, setCurrentEmail] = useState('');
@@ -33,11 +41,12 @@ export default function SettingsPage() {
 
     // Fetch Camera Settings
     supabase.from('camera_settings').select('*').eq('id', 1).single().then(({ data, error }) => {
-      if (data && !error) {
-        setEnableMirror(data.enable_mirror);
-        setEnableWideLens(data.enable_wide_lens);
-        setEnableSwitchCamera(data.enable_switch_camera);
-        setEnableFlash(data.enable_flash);
+      const settings = data as CameraSettings | null;
+      if (settings && !error) {
+        setEnableMirror(settings.enable_mirror);
+        setEnableWideLens(settings.enable_wide_lens);
+        setEnableSwitchCamera(settings.enable_switch_camera);
+        setEnableFlash(settings.enable_flash);
       }
     });
   }, []);
@@ -121,7 +130,7 @@ export default function SettingsPage() {
         enable_wide_lens: enableWideLens,
         enable_switch_camera: enableSwitchCamera,
         enable_flash: enableFlash,
-      }).eq('id', 1);
+      } as never).eq('id', 1);
 
       if (error) {
         setCameraMessage({ type: 'error', text: error.message });
