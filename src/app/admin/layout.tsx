@@ -12,6 +12,7 @@ import {
   Settings,
   Download,
 } from "lucide-react";
+import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 export default function AdminLayout({
   children,
@@ -19,19 +20,40 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const [adminEmail, setAdminEmail] = useState("admin@piawai.id");
+  const [adminEmail, setAdminEmail] = useState("");
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
-    const auth = localStorage.getItem("photobooth_admin_auth");
-    if (auth !== "true" && pathname !== "/admin/login") {
-      router.push("/admin/login");
-    } else {
-      setIsAuthenticated(true);
-      const email = localStorage.getItem("admin_email");
-      if (email) setAdminEmail(email);
-    }
+    const supabase = getSupabaseBrowserClient();
+
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session && pathname !== "/admin/login") {
+        router.push("/admin/login");
+      } else if (session) {
+        setIsAuthenticated(true);
+        setAdminEmail(session.user.email || "Admin");
+      }
+    };
+
+    checkSession();
+
+    // Listen for auth state changes (login/logout from other tabs, token refresh, etc.)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session && pathname !== "/admin/login") {
+        setIsAuthenticated(false);
+        router.push("/admin/login");
+      } else if (session) {
+        setIsAuthenticated(true);
+        setAdminEmail(session.user.email || "Admin");
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [pathname, router]);
 
   if (pathname === "/admin/login") {
@@ -46,8 +68,9 @@ export default function AdminLayout({
     );
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("photobooth_admin_auth");
+  const handleLogout = async () => {
+    const supabase = getSupabaseBrowserClient();
+    await supabase.auth.signOut();
     router.push("/admin/login");
   };
 
