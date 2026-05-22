@@ -119,7 +119,7 @@ function DownloadContent() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Piawai_Photobooth_${new Date().getTime()}.${ext}`;
+      a.download = `CubaPoto_${new Date().getTime()}.${ext}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -136,8 +136,8 @@ function DownloadContent() {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: 'Piawai Photobooth',
-          text: 'Lihat foto saya dari Piawai Photobooth!',
+          title: 'CobaPoto',
+          text: 'Lihat foto saya dari CobaPoto!',
           url: imageUrl,
         });
       } else {
@@ -157,15 +157,15 @@ function DownloadContent() {
     <div className="min-h-screen bg-[#f8f6f3] flex flex-col items-center text-slate-800 px-5 py-10 relative overflow-hidden font-sans">
       {/* Subtle ambient background */}
       <div
-        className="absolute inset-0 z-0 opacity-[0.06] blur-[80px] scale-125 pointer-events-none"
+        className="absolute inset-0 z-0 opacity-[0.90] blur-[30px] scale-125 pointer-events-none"
         style={{ backgroundImage: `url(${imageUrl})`, backgroundPosition: 'center', backgroundSize: 'cover' }}
       />
 
       <div className="z-10 w-full max-w-sm flex flex-col items-center animate-fade-in-up">
         {/* Minimal header */}
         <div className="mb-8 text-center mt-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 mb-2">CubaPoto</p>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60 mb-2" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>CubaPoto</p>
+          <h1 className="text-2xl font-bold text-slate-100 tracking-tight" style={{ textShadow: '2px 2px 4px rgba(0, 0, 0, 0.2)' }}>
             Foto kamu sudah siap ✨
           </h1>
         </div>
@@ -175,20 +175,22 @@ function DownloadContent() {
           <div className="flex gap-2 mb-6">
             <button
               onClick={() => setActiveTab('photo')}
-              className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 ${activeTab === 'photo'
-                ? 'bg-slate-800 text-white shadow-lg shadow-slate-800/20'
-                : 'bg-white/70 text-slate-500 hover:bg-white hover:text-slate-700'
+              className={`px-5 py-2.5 text-xs font-semibold rounded-full transition-all duration-300 backdrop-blur-xl border ${activeTab === 'photo'
+                ? 'bg-white/30 text-white border-white/40 shadow-lg shadow-black/10'
+                : 'bg-white/10 text-white/70 border-white/15 hover:bg-white/20 hover:text-white'
                 }`}
+              style={{ textShadow: '0 1px 2px rgba(0,0,0,0.15)' }}
             >
               Foto
             </button>
             {hasGif && (
               <button
                 onClick={() => setActiveTab('gif')}
-                className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 ${activeTab === 'gif'
-                  ? 'bg-slate-800 text-white shadow-lg shadow-slate-800/20'
-                  : 'bg-white/70 text-slate-500 hover:bg-white hover:text-slate-700'
+                className={`px-5 py-2.5 text-xs font-semibold rounded-full transition-all duration-300 backdrop-blur-xl border ${activeTab === 'gif'
+                  ? 'bg-white/30 text-white border-white/40 shadow-lg shadow-black/10'
+                  : 'bg-white/10 text-white/70 border-white/15 hover:bg-white/20 hover:text-white'
                   }`}
+                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.15)' }}
               >
                 GIF
               </button>
@@ -196,10 +198,11 @@ function DownloadContent() {
             {hasLive && (
               <button
                 onClick={() => setActiveTab('live')}
-                className={`px-5 py-2 text-xs font-semibold rounded-full transition-all duration-300 ${activeTab === 'live'
-                  ? 'bg-gradient-to-r from-violet-600 to-fuchsia-500 text-white shadow-lg shadow-violet-500/30'
-                  : 'bg-white/70 text-slate-500 hover:bg-white hover:text-slate-700'
+                className={`px-5 py-2.5 text-xs font-semibold rounded-full transition-all duration-300 backdrop-blur-xl border ${activeTab === 'live'
+                  ? 'bg-white/30 text-white border-white/40 shadow-lg shadow-black/10'
+                  : 'bg-white/10 text-white/70 border-white/15 hover:bg-white/20 hover:text-white'
                   }`}
+                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.15)' }}
               >
                 Live Photo
               </button>
@@ -209,7 +212,7 @@ function DownloadContent() {
 
         {/* Floating photo frame — no container, no border */}
         <div className="relative w-full mb-8 group">
-          <div className="relative aspect-[3/4] w-full overflow-hidden shadow-[0_25px_60px_-15px_rgba(0,0,0,0.15)] transition-all duration-500 group-hover:shadow-[0_30px_70px_-15px_rgba(0,0,0,0.2)] group-hover:-translate-y-1">
+          <div className="relative aspect-[3/4] w-full overflow-hidden transition-all duration-500 group-hover:shadow-[0_30px_70px_-15px_rgba(0,0,0,0.2)] group-hover:-translate-y-1">
             {isCurrentTabLoading ? (
               <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
                 <div className="w-12 h-12 border-[3px] border-slate-200 border-t-slate-600 rounded-full animate-spin mb-4" />
@@ -230,13 +233,13 @@ function DownloadContent() {
               <img
                 src={currentGifUrl}
                 alt="Photobooth GIF Raw"
-                className="w-full h-full object-contain bg-white"
+                className="w-full h-full object-contain"
               />
             ) : activeTab === 'live' && currentLiveUrl ? (
               <img
                 src={currentLiveUrl}
                 alt="Photobooth Live Photo"
-                className="w-full h-full object-contain bg-white"
+                className="w-full h-full object-contain"
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-slate-50">
@@ -246,12 +249,13 @@ function DownloadContent() {
           </div>
         </div>
 
-        {/* Action Buttons — clean & minimal */}
+        {/* Action Buttons — glass style */}
         <div className="w-full flex flex-col gap-3 mb-8">
           <button
             onClick={handleDownload}
             disabled={isDownloading || isCurrentTabLoading}
-            className="w-full py-3.5 px-6 bg-slate-800 text-white font-semibold text-sm rounded-2xl flex items-center justify-center gap-2.5 hover:bg-slate-900 transition-all duration-300 shadow-lg shadow-slate-800/20 active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100"
+            className="w-full py-3.5 px-6 bg-white/20 backdrop-blur-xl text-white font-semibold text-sm rounded-2xl flex items-center justify-center gap-2.5 border border-white/30 hover:bg-white/30 transition-all duration-300 shadow-lg shadow-black/10 active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100"
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
           >
             {isDownloading ? (
               <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -266,7 +270,8 @@ function DownloadContent() {
 
           <button
             onClick={handleShare}
-            className="w-full py-3.5 px-6 bg-white/80 backdrop-blur-sm text-slate-600 font-semibold text-sm rounded-2xl flex items-center justify-center gap-2.5 hover:bg-white transition-all duration-300 shadow-sm hover:shadow-md active:scale-[0.97]"
+            className="w-full py-3.5 px-6 bg-white/10 backdrop-blur-xl text-white/80 font-semibold text-sm rounded-2xl flex items-center justify-center gap-2.5 border border-white/20 hover:bg-white/20 hover:text-white transition-all duration-300 shadow-sm shadow-black/5 active:scale-[0.97]"
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.15)' }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
             Bagikan
