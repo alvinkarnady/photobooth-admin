@@ -29,6 +29,10 @@ export default function EditFramePage(props: { params: Promise<{ id: string }> }
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [liveDuration, setLiveDuration] = useState<number>(5);
 
+  // Paper Category State
+  const [categories, setCategories] = useState<{name: string, is_active: boolean}[]>([]);
+  const [paperCategory, setPaperCategory] = useState('4x6 Standard');
+
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Interaction State
@@ -55,6 +59,13 @@ export default function EditFramePage(props: { params: Promise<{ id: string }> }
       setName(data.name);
       setPreviewUrl(data.overlay_image_path);
       setImageSize({ width: data.canvas_width || 0, height: data.canvas_height || 0 });
+      if (data.paper_size_category) {
+        setPaperCategory(data.paper_size_category);
+      }
+
+      // Fetch categories
+      const { data: catData } = await supabase.from('paper_categories').select('name, is_active').order('name');
+      if (catData) setCategories(catData);
       
       if (data.photo_slots) {
         const loadedSlots = data.photo_slots.map((s: any) => ({
@@ -173,6 +184,7 @@ export default function EditFramePage(props: { params: Promise<{ id: string }> }
       // Update DB
       const { error: dbError } = await supabase.from('frames').update({
         name,
+        paper_size_category: paperCategory,
         overlay_image_path: publicUrl,
         canvas_width: imageSize.width,
         canvas_height: imageSize.height,
@@ -231,6 +243,26 @@ export default function EditFramePage(props: { params: Promise<{ id: string }> }
                 onChange={(e) => setName(e.target.value)}
                 className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none bg-slate-50"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Kategori Ukuran</label>
+              <select
+                value={paperCategory}
+                onChange={(e) => setPaperCategory(e.target.value)}
+                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none bg-slate-50 text-slate-700"
+              >
+                {categories.length === 0 && <option value={paperCategory}>{paperCategory}</option>}
+                {categories.map(cat => (
+                  <option key={cat.name} value={cat.name}>
+                    {cat.name} {!cat.is_active && '(Nonaktif)'}
+                  </option>
+                ))}
+                {/* Fallback if current category no longer exists in table */}
+                {categories.length > 0 && !categories.some(c => c.name === paperCategory) && (
+                  <option value={paperCategory}>{paperCategory} (Dihapus)</option>
+                )}
+              </select>
             </div>
 
             <div>

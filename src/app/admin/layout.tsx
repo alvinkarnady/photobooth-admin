@@ -11,6 +11,7 @@ import {
   PlusSquare,
   Settings,
   Download,
+  FileText,
 } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -78,6 +79,7 @@ export default function AdminLayout({
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { name: "Manajemen Frame", href: "/admin/frames", icon: ImageIcon },
     { name: "Buat Frame Baru", href: "/admin/frames/create", icon: PlusSquare },
+    { name: "Kategori Kertas", href: "/admin/categories", icon: FileText },
     { name: "Manajemen Download", href: "/admin/downloads", icon: Download },
     { name: "Pengaturan", href: "/admin/settings", icon: Settings },
   ];

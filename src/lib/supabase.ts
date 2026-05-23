@@ -1,26 +1,30 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-// General-purpose Supabase client (works server & client side)
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Singleton Supabase client — one instance for both server and browser
+// This avoids the "Multiple GoTrueClient instances" warning
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _supabase: SupabaseClient<any, 'public', any> | null = null;
 
-// Browser-only Supabase client for auth (persists session in localStorage)
-let browserClient: ReturnType<typeof createClient> | null = null;
-
-export function getSupabaseBrowserClient() {
-  if (typeof window === 'undefined') {
-    throw new Error('getSupabaseBrowserClient() can only be called in the browser');
-  }
-  if (!browserClient) {
-    browserClient = createClient(supabaseUrl, supabaseAnonKey, {
+function getClient() {
+  if (!_supabase) {
+    _supabase = createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
+        persistSession: typeof window !== 'undefined',
+        autoRefreshToken: typeof window !== 'undefined',
+        detectSessionInUrl: typeof window !== 'undefined',
       },
     });
   }
-  return browserClient;
+  return _supabase;
+}
+
+// Default export for general use (DB queries, storage, etc.)
+export const supabase = getClient();
+
+// Alias for browser auth usage — returns the same singleton
+export function getSupabaseBrowserClient() {
+  return getClient();
 }

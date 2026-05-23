@@ -24,6 +24,22 @@ export default function CreateFramePage() {
   const [isSaving, setIsSaving] = useState(false);
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [liveDuration, setLiveDuration] = useState<number>(5);
+  
+  // Paper Category State
+  const [categories, setCategories] = useState<{name: string, is_active: boolean}[]>([]);
+  const [paperCategory, setPaperCategory] = useState('4x6 Standard');
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      const { data } = await supabase.from('paper_categories').select('name, is_active').order('name');
+      if (data && data.length > 0) {
+        setCategories(data);
+        const activeFirst = data.find(d => d.is_active);
+        if (activeFirst) setPaperCategory(activeFirst.name);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -130,6 +146,7 @@ export default function CreateFramePage() {
         id,
         name,
         layout: 'custom',
+        paper_size_category: paperCategory,
         overlay_image_path: publicUrlData.publicUrl,
         primary_color: 4293361251, // Default Pink Hex
         background_color: 4294765804, 
@@ -183,6 +200,22 @@ export default function CreateFramePage() {
                 placeholder="Contoh: Frame Pernikahan"
                 className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none bg-slate-50"
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-slate-700 mb-2">Kategori Ukuran</label>
+              <select
+                value={paperCategory}
+                onChange={(e) => setPaperCategory(e.target.value)}
+                className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none bg-slate-50 text-slate-700"
+              >
+                {categories.length === 0 && <option value="4x6 Standard">4x6 Standard</option>}
+                {categories.map(cat => (
+                  <option key={cat.name} value={cat.name}>
+                    {cat.name} {!cat.is_active && '(Nonaktif)'}
+                  </option>
+                ))}
+              </select>
             </div>
 
             <div>

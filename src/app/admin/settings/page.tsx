@@ -130,7 +130,7 @@ export default function SettingsPage() {
         enable_wide_lens: enableWideLens,
         enable_switch_camera: enableSwitchCamera,
         enable_flash: enableFlash,
-      } as never).eq('id', 1);
+      }).eq('id', 1);
 
       if (error) {
         setCameraMessage({ type: 'error', text: error.message });

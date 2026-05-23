@@ -1,16 +1,12 @@
-require('dotenv').config({ path: '.env.local' });
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function check() {
-  const { data, error } = await supabase.storage.from('photos').list();
-  console.log('Photos bucket root:', data?.length, 'items', error);
-  if (data && data.length > 0) {
-    console.log('First few items:', data.slice(0, 5));
-  }
+  const { data, error } = await supabase.from('camera_settings').select('*');
+  console.log(data, error);
 }
+
 check();
