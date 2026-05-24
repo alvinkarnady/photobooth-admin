@@ -32,6 +32,7 @@ export default function SettingsPage() {
 
   // App Settings State
   const [enablePayment, setEnablePayment] = useState(true);
+  const [price, setPrice] = useState<number | ''>(20000);
   const [isSavingApp, setIsSavingApp] = useState(false);
   const [appMessage, setAppMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -59,6 +60,9 @@ export default function SettingsPage() {
     supabase.from('app_settings').select('*').eq('id', 1).single().then(({ data, error }) => {
       if (data && !error) {
         setEnablePayment(data.enable_payment);
+        if (data.price !== undefined) {
+          setPrice(data.price);
+        }
       }
     });
   }, []);
@@ -158,6 +162,11 @@ export default function SettingsPage() {
 
   const handleUpdateAppSettings = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (price === '') {
+      setAppMessage({ type: 'error', text: 'Harga tidak boleh kosong!' });
+      return;
+    }
+
     setIsSavingApp(true);
     setAppMessage(null);
 
@@ -165,6 +174,7 @@ export default function SettingsPage() {
       const supabase = getSupabaseBrowserClient();
       const { error } = await supabase.from('app_settings').update({
         enable_payment: enablePayment,
+        price: Number(price),
       }).eq('id', 1);
 
       if (error) {
@@ -208,6 +218,28 @@ export default function SettingsPage() {
                 <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${enablePayment ? 'translate-x-6' : ''}`}></div>
               </div>
             </label>
+
+            {/* Price Input */}
+            <div className="p-4 border border-slate-200 rounded-xl">
+              <label className="block mb-2">
+                <div className="font-semibold text-slate-800">Harga Sesi Fotobooth</div>
+                <div className="text-xs text-slate-500 mt-1">Harga yang ditagihkan via QRIS.</div>
+              </label>
+              <div className="relative mt-2">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-500 font-semibold">
+                  Rp
+                </div>
+                <input
+                  type="number"
+                  min="0"
+                  step="1000"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full pl-12 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all font-medium"
+                  placeholder="20000"
+                />
+              </div>
+            </div>
           </div>
 
           {appMessage && (
