@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, User, Lock, Loader2, CheckCircle, Camera } from 'lucide-react';
+import { Save, User, Lock, Loader2, CheckCircle, Camera, CreditCard } from 'lucide-react';
 import { getSupabaseBrowserClient } from '@/lib/supabase';
 
 interface CameraSettings {
@@ -30,6 +30,11 @@ export default function SettingsPage() {
   const [isSavingCamera, setIsSavingCamera] = useState(false);
   const [cameraMessage, setCameraMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  // App Settings State
+  const [enablePayment, setEnablePayment] = useState(true);
+  const [isSavingApp, setIsSavingApp] = useState(false);
+  const [appMessage, setAppMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -47,6 +52,13 @@ export default function SettingsPage() {
         setEnableWideLens(settings.enable_wide_lens);
         setEnableSwitchCamera(settings.enable_switch_camera);
         setEnableFlash(settings.enable_flash);
+      }
+    });
+
+    // Fetch App Settings
+    supabase.from('app_settings').select('*').eq('id', 1).single().then(({ data, error }) => {
+      if (data && !error) {
+        setEnablePayment(data.enable_payment);
       }
     });
   }, []);
@@ -144,11 +156,78 @@ export default function SettingsPage() {
     }
   };
 
+  const handleUpdateAppSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingApp(true);
+    setAppMessage(null);
+
+    try {
+      const supabase = getSupabaseBrowserClient();
+      const { error } = await supabase.from('app_settings').update({
+        enable_payment: enablePayment,
+      }).eq('id', 1);
+
+      if (error) {
+        setAppMessage({ type: 'error', text: error.message });
+      } else {
+        setAppMessage({ type: 'success', text: 'Pengaturan pembayaran berhasil disimpan!' });
+      }
+    } catch {
+      setAppMessage({ type: 'error', text: 'Terjadi kesalahan. Coba lagi nanti.' });
+    } finally {
+      setIsSavingApp(false);
+    }
+  };
+
   return (
     <div className="max-w-2xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-slate-800">Pengaturan Akun</h1>
-        <p className="text-slate-500 mt-1">Ubah email dan password akun admin kamu.</p>
+        <p className="text-slate-500 mt-1">Ubah email, password, dan fitur aplikasi.</p>
+      </div>
+
+      {/* App Settings */}
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm mb-6">
+        <h2 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+          <CreditCard className="w-5 h-5 text-pink-500" />
+          Pengaturan Pembayaran
+        </h2>
+        <p className="text-sm text-slate-500 mb-6">Aktifkan atau nonaktifkan layar pembayaran (QRIS/Voucher) di aplikasi iPad.</p>
+        
+        <form onSubmit={handleUpdateAppSettings} className="space-y-6">
+          <div className="grid grid-cols-1 gap-4">
+            {/* Payment Toggle */}
+            <label className="flex items-center justify-between p-4 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-colors">
+              <div>
+                <div className="font-semibold text-slate-800">Gerbang Pembayaran</div>
+                <div className="text-xs text-slate-500 mt-1">Jika dimatikan, pengguna akan langsung masuk sesi foto tanpa membayar.</div>
+              </div>
+              <div className="relative">
+                <input type="checkbox" className="sr-only" checked={enablePayment} onChange={(e) => setEnablePayment(e.target.checked)} />
+                <div className={`block w-14 h-8 rounded-full transition-colors ${enablePayment ? 'bg-pink-500' : 'bg-slate-300'}`}></div>
+                <div className={`absolute left-1 top-1 bg-white w-6 h-6 rounded-full transition-transform ${enablePayment ? 'translate-x-6' : ''}`}></div>
+              </div>
+            </label>
+          </div>
+
+          {appMessage && (
+            <div className={`p-4 rounded-xl flex items-center gap-2 text-sm ${appMessage.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+              <CheckCircle className="w-4 h-4" />
+              {appMessage.text}
+            </div>
+          )}
+
+          <div className="flex justify-end pt-2">
+            <button
+              type="submit"
+              disabled={isSavingApp}
+              className="px-6 py-2.5 bg-slate-800 text-white rounded-xl font-semibold hover:bg-slate-700 transition-colors disabled:opacity-70 flex items-center gap-2"
+            >
+              {isSavingApp ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Simpan Pengaturan
+            </button>
+          </div>
+        </form>
       </div>
 
       {/* Camera Settings */}

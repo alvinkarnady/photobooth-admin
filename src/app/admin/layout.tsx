@@ -12,6 +12,7 @@ import {
   Settings,
   Download,
   FileText,
+  Ticket,
 } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -77,6 +78,7 @@ export default function AdminLayout({
 
   const navItems = [
     { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+    { name: "Manajemen Voucher", href: "/admin/vouchers", icon: Ticket },
     { name: "Manajemen Frame", href: "/admin/frames", icon: ImageIcon },
     { name: "Buat Frame Baru", href: "/admin/frames/create", icon: PlusSquare },
     { name: "Kategori Kertas", href: "/admin/categories", icon: FileText },
