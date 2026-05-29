@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mémoire - Contact</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#1c1b1b",
+                        "on-secondary-fixed-variant": "#474744",
+                        "on-background": "#1b1c1c",
+                        "inverse-primary": "#c8c6c5",
+                        "surface-container": "#efeded",
+                        "on-primary": "#ffffff",
+                        "surface": "#fbf9f8",
+                        "tertiary": "#000000",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#e6e2dc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#474746",
+                        "surface-dim": "#dbd9d9",
+                        "surface-container-highest": "#e4e2e2",
+                        "primary": "#000000",
+                        "surface-tint": "#5f5e5e",
+                        "background": "#fbf9f8",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#cac6c0",
+                        "secondary-fixed": "#e4e2dd",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#747878",
+                        "inverse-on-surface": "#f2f0f0",
+                        "surface-container-high": "#eae8e7",
+                        "on-surface": "#1b1c1c",
+                        "on-surface-variant": "#444748",
+                        "surface-container-low": "#f5f3f3",
+                        "primary-fixed": "#e5e2e1",
+                        "surface-variant": "#e4e2e2",
+                        "secondary-fixed-dim": "#c8c6c2",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#1c1c18",
+                        "inverse-surface": "#303030",
+                        "secondary-container": "#e1dfdb",
+                        "on-tertiary-fixed-variant": "#484742",
+                        "tertiary-container": "#1c1c18",
+                        "on-secondary-container": "#63635f",
+                        "on-primary-container": "#858383",
+                        "outline-variant": "#c4c7c7",
+                        "surface-bright": "#fbf9f8",
+                        "secondary": "#5e5e5b",
+                        "on-secondary-fixed": "#1b1c19",
+                        "on-tertiary-container": "#86837e",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "primary-container": "#1c1b1b",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-desktop": "64px",
+                        "container-max": "1280px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Libre Caslon Text"],
+                        "label-lg": ["Manrope"],
+                        "display-mobile": ["Libre Caslon Text"],
+                        "label-sm": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "headline-sm": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "display-mobile": ["40px", { "lineHeight": "48px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "headline-lg": ["48px", { "lineHeight": "56px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .ghost-border { border: 1px solid var(--tw-colors-outline-variant); }
+        .input-border { border-bottom: 1px solid var(--tw-colors-primary); }
+    </style>
+</head>
+<body class="bg-background text-on-background antialiased selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-background border-b border-outline-variant sticky top-0 z-50">
+<div class="flex justify-between items-center w-full h-20 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<a class="font-display-mobile md:font-display-lg text-display-mobile md:text-display-lg text-primary dark:text-on-surface tracking-tighter" href="#">Mémoire</a>
+<nav class="hidden md:flex gap-8 items-center">
+<a class="font-label-lg text-label-lg text-secondary dark:text-on-secondary-container hover:text-primary dark:hover:text-on-surface transition-colors duration-300" href="#">Home</a>
+<a class="font-label-lg text-label-lg text-secondary dark:text-on-secondary-container hover:text-primary dark:hover:text-on-surface transition-colors duration-300" href="#">Services</a>
+<a class="font-label-lg text-label-lg text-secondary dark:text-on-secondary-container hover:text-primary dark:hover:text-on-surface transition-colors duration-300" href="#">Portfolio</a>
+<a class="font-label-lg text-label-lg text-primary dark:text-on-surface border-b border-primary dark:border-on-surface pb-1" href="#">Contact</a>
+</nav>
+<button class="hidden md:block bg-primary text-on-primary px-6 py-3 font-label-lg text-label-lg hover:bg-on-surface-variant transition-colors">Book Now</button>
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+</div>
+</header>
+<main class="flex-grow pt-margin-desktop pb-margin-desktop px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto w-full">
+<!-- Let's Create Something Timeless Section -->
+<section class="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-[128px]">
+<div class="flex flex-col justify-center pr-0 lg:pr-gutter">
+<h1 class="font-display-mobile md:font-display-lg text-display-mobile md:text-display-lg mb-8 tracking-tighter">Let's Create<br/>Something Timeless</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-lg mb-12">
+                    Every detail matters. We invite you to share your vision with us. Fill out the inquiry form below, and we will begin the conversation to ink your memories in time.
+                </p>
+<div class="space-y-6">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-outline" style="font-variation-settings: 'FILL' 0;">mail</span>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Email</p>
+<a class="font-body-md text-body-md hover:underline decoration-outline underline-offset-4 transition-all" href="mailto:inquiries@memoire.studio">inquiries@memoire.studio</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-outline" style="font-variation-settings: 'FILL' 0;">call</span>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Phone</p>
+<p class="font-body-md text-body-md">+1 (555) 019-8372</p>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-outline" style="font-variation-settings: 'FILL' 0;">location_on</span>
+<div>
+<p class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Studio</p>
+<p class="font-body-md text-body-md">By Appointment Only<br/>124 Silk Row, Atelier District</p>
+</div>
+</div>
+</div>
+</div>
+<div class="h-[600px] w-full bg-surface-container-low ghost-border p-4 relative overflow-hidden group">
+<div class="absolute inset-4 border border-outline-variant/30 pointer-events-none z-10"></div>
+<img alt="A sophisticated, high-end editorial workspace featuring minimalist analogue photography tools, a vintage camera, and delicate film strips resting on textured, high-quality white paper. The lighting is soft and natural, casting subtle shadows that emphasize the tactile nature of the materials. The overall palette is strictly monochromatic with deep charcoal blacks and pristine vellum whites, perfectly reflecting the brand's 'Memories, Inked in Time' aesthetic." class="w-full h-full object-cover filter grayscale opacity-90 group-hover:scale-105 transition-transform duration-1000 ease-in-out" data-alt="A sophisticated, high-end editorial workspace featuring minimalist analogue photography tools, a vintage camera, and delicate film strips resting on textured, high-quality white paper. The lighting is soft and natural, casting subtle shadows that emphasize the tactile nature of the materials. The overall palette is strictly monochromatic with deep charcoal blacks and pristine vellum whites, perfectly reflecting the brand's 'Memories, Inked in Time' aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDPqUeDHyGH_ktDAy7gZld8zwOie7qrcRYiG53pM5Y9-HBK0Rn42UdBqiRQqUWzafZBAn5LTnSiSD74iufyv167uveJ_5_qdemDvxAw1BCwV63JBC8kOLDMc5vH12HoExI-q1gSInjuxkLO0lCyG1MyWRaXNmj6h_eclJHi3YIwF3rtJl6UuJnbBRcptlCqjoAnkwIXu-1y3PTPGGzozw0S6Nc8CJKImBp1H9AyzPMy3zGzZfuEzECb-G-OsvAU1pzcOnjKDVo1msg"/>
+</div>
+</section>
+<!-- Form & Map Section -->
+<section class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+<!-- Booking Form -->
+<div class="lg:col-span-7 ghost-border p-8 md:p-12 bg-surface">
+<h2 class="font-headline-sm md:font-headline-md text-headline-sm md:text-headline-md mb-8">Inquiry Form</h2>
+<form class="space-y-8">
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="relative">
+<input class="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent" id="first_name" placeholder="First Name" type="text"/>
+<label class="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" for="first_name">First Name</label>
+</div>
+<div class="relative">
+<input class="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent" id="last_name" placeholder="Last Name" type="text"/>
+<label class="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" for="last_name">Last Name</label>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="relative">
+<input class="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent" id="email" placeholder="Email Address" type="email"/>
+<label class="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" for="email">Email Address</label>
+</div>
+<div class="relative">
+<input class="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent" id="phone" placeholder="Phone Number" type="tel"/>
+<label class="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" for="phone">Phone Number</label>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="relative">
+<input class="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary text-primary" id="event_date" placeholder="Event Date" type="date"/>
+<label class="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all" for="event_date">Event Date</label>
+</div>
+<div class="relative">
+<input class="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent" id="venue" placeholder="Venue Location" type="text"/>
+<label class="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" for="venue">Venue Location</label>
+</div>
+</div>
+<div class="relative">
+<select class="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary text-primary" id="package">
+<option disabled="" selected="" value="">Select a Package of Interest</option>
+<option value="editorial">Editorial Portraiture</option>
+<option value="wedding">Curated Wedding Narrative</option>
+<option value="commercial">Artisanal Commercial</option>
+<option value="custom">Bespoke Commission</option>
+</select>
+<label class="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant" for="package">Package of Interest</label>
+</div>
+<div class="relative">
+<textarea class="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent resize-none" id="details" placeholder="Tell us about your vision..." rows="4"></textarea>
+<label class="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" for="details">Tell us about your vision...</label>
+</div>
+<button class="w-full md:w-auto bg-primary text-on-primary px-8 py-4 font-label-lg text-label-lg hover:bg-on-surface-variant transition-colors mt-8" type="submit">Submit Inquiry</button>
+</form>
+</div>
+<!-- Inked Map -->
+<div class="lg:col-span-5 h-[400px] lg:h-auto ghost-border p-2 bg-surface">
+<div class="w-full h-full bg-surface-variant relative overflow-hidden flex items-center justify-center grayscale contrast-125">
+<!-- Placeholder for Map Image - Using a stylized graphic representation -->
+<img alt="An abstract, stylized overhead map of a sophisticated city district, rendered in high-contrast black and white ink style. The lines are delicate and precise, reminiscent of vintage cartography or a minimalist architectural blueprint. The aesthetic perfectly matches the brand's 'Memories, Inked in Time' theme with its monochromatic charcoal and vellum palette." class="w-full h-full object-cover opacity-80 mix-blend-multiply" data-alt="An abstract, stylized overhead map of a sophisticated city district, rendered in high-contrast black and white ink style. The lines are delicate and precise, reminiscent of vintage cartography or a minimalist architectural blueprint. The aesthetic perfectly matches the brand's 'Memories, Inked in Time' theme with its monochromatic charcoal and vellum palette." data-location="Atelier District" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDV2lCWs-FC8QAYzKUeQLBxEc9uKddnyxrCVWCHrNHiZfEVHaGJzKPMwoJXpN45YQnLB9ErcjkFWTGGcaheEHUMkBW76QOA43ulecGGcDKCeeyQM0X-_qhIJVk-Cc0Nep5DlT2E19ODYQRo6dYhFGQy4hWNB0Vj6tr6jzXzfunk2CIArzgSu-NUDf530DTV761V2VuDYIy2rduxMi5nJ45ZBCYcp07_1t--s6JV6E4UqvPQRPX8YzIHGNVe53uV4i_Kcj4c26Ui3qI"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface/50 to-transparent pointer-events-none"></div>
+<!-- Subtle Location Marker -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
+<div class="w-4 h-4 bg-primary rounded-full shadow-[0_2px_4px_rgba(0,0,0,0.5)] border-2 border-surface"></div>
+<div class="mt-2 px-3 py-1 bg-surface ghost-border text-primary font-label-sm text-label-sm whitespace-nowrap shadow-sm">Mémoire Studio</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface dark:bg-background border-t border-outline-variant mt-auto">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter py-margin-desktop px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<div>
+<a class="font-display-mobile md:font-display-mobile text-display-mobile md:text-display-mobile text-primary dark:text-on-surface opacity-70 hover:opacity-100 transition-opacity" href="#">Mémoire</a>
+</div>
+<div class="flex flex-col gap-2">
+<nav class="flex flex-col gap-2">
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-secondary-container hover:underline decoration-outline underline-offset-4 transition-all" href="#">Instagram</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-secondary-container hover:underline decoration-outline underline-offset-4 transition-all" href="#">Pinterest</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-secondary-container hover:underline decoration-outline underline-offset-4 transition-all" href="#">Privacy</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-secondary-container hover:underline decoration-outline underline-offset-4 transition-all" href="#">Terms</a>
+</nav>
+</div>
+<div class="flex items-end justify-start md:justify-end">
+<p class="font-body-md text-body-md text-primary dark:text-on-surface">© 2024 Mémoire. Memories, Inked in Time.</p>
+</div>
+</div>
+</footer>
+</body></html>

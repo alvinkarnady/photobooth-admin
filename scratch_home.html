@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Mémoire | Memories, Inked in Time</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#1c1b1b",
+                        "on-secondary-fixed-variant": "#474744",
+                        "on-background": "#1b1c1c",
+                        "inverse-primary": "#c8c6c5",
+                        "surface-container": "#efeded",
+                        "on-primary": "#ffffff",
+                        "surface": "#fbf9f8",
+                        "tertiary": "#000000",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#e6e2dc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#474746",
+                        "surface-dim": "#dbd9d9",
+                        "surface-container-highest": "#e4e2e2",
+                        "primary": "#000000",
+                        "surface-tint": "#5f5e5e",
+                        "background": "#fbf9f8",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#cac6c0",
+                        "secondary-fixed": "#e4e2dd",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#747878",
+                        "inverse-on-surface": "#f2f0f0",
+                        "surface-container-high": "#eae8e7",
+                        "on-surface": "#1b1c1c",
+                        "on-surface-variant": "#444748",
+                        "surface-container-low": "#f5f3f3",
+                        "primary-fixed": "#e5e2e1",
+                        "surface-variant": "#e4e2e2",
+                        "secondary-fixed-dim": "#c8c6c2",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#1c1c18",
+                        "inverse-surface": "#303030",
+                        "secondary-container": "#e1dfdb",
+                        "on-tertiary-fixed-variant": "#484742",
+                        "tertiary-container": "#1c1c18",
+                        "on-secondary-container": "#63635f",
+                        "on-primary-container": "#858383",
+                        "outline-variant": "#c4c7c7",
+                        "surface-bright": "#fbf9f8",
+                        "secondary": "#5e5e5b",
+                        "on-secondary-fixed": "#1b1c19",
+                        "on-tertiary-container": "#86837e",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "primary-container": "#1c1b1b",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-desktop": "64px",
+                        "container-max": "1280px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Libre Caslon Text"],
+                        "label-lg": ["Manrope"],
+                        "display-mobile": ["Libre Caslon Text"],
+                        "label-sm": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "headline-sm": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "display-mobile": ["40px", { "lineHeight": "48px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "headline-lg": ["48px", { "lineHeight": "56px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "400" }]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .noise-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.04;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            z-index: 10;
+        }
+        .matte-image {
+            box-sizing: border-box;
+            border: 24px solid var(--tw-colors-surface);
+            background-color: var(--tw-colors-surface);
+        }
+    </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen relative overflow-x-hidden selection:bg-primary selection:text-on-primary">
+<!-- TopAppBar -->
+<header class="docked full-width top-0 sticky z-50 bg-surface border-b border-outline-variant flat no shadows">
+<div class="flex justify-between items-center w-full h-20 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<a class="font-display-lg text-headline-sm md:text-headline-md text-primary tracking-tighter hover:opacity-80 transition-opacity" href="#">Mémoire</a>
+<nav class="hidden md:flex gap-8 items-center font-label-lg text-label-lg">
+<a class="text-primary border-b border-primary pb-1" href="#">Home</a>
+<a class="text-secondary hover:text-primary transition-colors duration-300 scale-95 active:opacity-80 transition-all" href="#">Services</a>
+<a class="text-secondary hover:text-primary transition-colors duration-300 scale-95 active:opacity-80 transition-all" href="#">Portfolio</a>
+<a class="text-secondary hover:text-primary transition-colors duration-300 scale-95 active:opacity-80 transition-all" href="#">Contact</a>
+</nav>
+<div class="hidden md:block">
+<button class="bg-primary text-on-primary px-6 py-3 font-label-lg text-label-lg rounded-DEFAULT hover:opacity-90 transition-opacity flex items-center gap-2">
+                    Book Now
+                </button>
+</div>
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+</div>
+</header>
+<main>
+<!-- Hero Section -->
+<section class="relative min-h-[90vh] flex flex-col justify-center items-center px-margin-mobile md:px-margin-desktop py-24 overflow-hidden">
+<div class="absolute inset-0 z-0">
+<div class="absolute inset-0 bg-gradient-to-b from-surface/40 to-surface/90 z-10"></div>
+<img alt="" class="w-full h-full object-cover grayscale opacity-60 mix-blend-multiply" data-alt="A minimalist, high-fashion black and white photograph of an elegant model subtly turning their head, captured on film with a soft, ethereal grain. The lighting is dramatic yet soft, casting long, moody shadows across a pristine white studio background. The overall aesthetic is one of quiet luxury, timeless elegance, and tactile nostalgia, perfectly matching the monochromatic 'inked in time' theme." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAfUi99ncc_wdXjzM3NCe2zGvv2rnATTF9UXXVApstnK6RsHtJH2qjwtnQQZUjsPXfzuJ8x0NhJP7DvEN1AMz4V7sh44y13_SMOiQ1PfArYPstXYIenLjP9qQ0QEDJr5GWFJFr2q8xHzBM4yj02M5rYyM1XaN3r7MOdLaC9TvZ7OgTbo1NBg6947nTDzQgqV48kH5N4LFNUDGfwn46TVvpJPqhhjU4p9dl8U3KhGrTvOBw3ENRxxMtKOeUWOQ1sznrR4SdDWxA0fW0"/>
+</div>
+<div class="relative z-20 flex flex-col items-center text-center max-w-3xl mx-auto space-y-12">
+<div class="w-48 h-48 md:w-64 md:h-64 mb-8">
+<img alt="Mémoire Logo Ink Splash" class="w-full h-full object-contain mix-blend-multiply opacity-90" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACQM_GmFHoAYpSpP4km_QixM04QFS0pVV2f4Jlki7qAzwu7Oac5vI283M4Sd-CZCsWGNjjIX228o3hADfwGGBghwI3XXmbgOfr0r4ukoUeawg-OYu3bqBIfFgwGEegcJZqCd_sPlbFLBt2r6GF6ttRrn2uYi-Yi0V4ZYiNqXeOVUYc_dq5V_orsBZ6v3myKh8rsDelNgJfDlNBZ6C4UT9lj8u8DtRd5J_ZP_x2NLD8Xyss4wXhQz0xk2Gwu_3wlELV8oBpzcnMV0g"/>
+</div>
+<h1 class="font-display-mobile md:font-display-lg text-display-mobile md:text-display-lg text-primary tracking-tight leading-tight">
+                    Memories, <br/><span class="italic font-light">Inked in Time.</span>
+</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-xl mx-auto font-light leading-relaxed">
+                    A highly curated, tactile photobooth experience designed for elegant gatherings. We capture fleeting moments and render them permanent through archival-quality prints and minimalist aesthetics.
+                </p>
+<div class="pt-8 flex flex-col sm:flex-row gap-6">
+<button class="bg-primary text-on-primary px-8 py-4 font-label-lg text-label-lg rounded-DEFAULT hover:opacity-90 transition-opacity tracking-widest uppercase">
+                        Reserve Your Date
+                    </button>
+<button class="border border-primary text-primary px-8 py-4 font-label-lg text-label-lg rounded-DEFAULT hover:bg-surface-variant transition-colors tracking-widest uppercase">
+                        Explore The Experience
+                    </button>
+</div>
+</div>
+<div class="absolute bottom-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-secondary z-20 animate-bounce">
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Scroll</span>
+<span class="material-symbols-outlined text-sm font-light">arrow_downward</span>
+</div>
+</section>
+<!-- The Experience Section -->
+<section class="py-32 px-margin-mobile md:px-margin-desktop bg-surface-container-lowest border-t border-outline-variant relative">
+<div class="max-w-container-max mx-auto">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-gutter items-center">
+<div class="md:col-span-5 md:col-start-2 space-y-8 order-2 md:order-1">
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest border-b border-outline-variant pb-2 inline-block">The Experience</span>
+<h2 class="font-headline-lg md:font-display-lg text-headline-lg md:text-display-lg text-primary leading-tight">
+                            Tactile.<br/>Editorial.<br/>Timeless.
+                        </h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant font-light">
+                            Step into a curated space designed to flatter. Our lighting is sculpted to mirror high-end fashion editorials, while our proprietary processing mimics the rich, tactile quality of analog film. 
+                        </p>
+<ul class="space-y-4 pt-4 border-t border-outline-variant">
+<li class="flex items-center gap-4 border-b border-outline-variant pb-4 font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary font-light">camera</span>
+                                Studio-Grade Illumination
+                            </li>
+<li class="flex items-center gap-4 border-b border-outline-variant pb-4 font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary font-light">layers</span>
+                                Archival Paper Stock
+                            </li>
+<li class="flex items-center gap-4 border-b border-outline-variant pb-4 font-body-md text-body-md text-on-surface">
+<span class="material-symbols-outlined text-primary font-light">contrast</span>
+                                Monochromatic Mastery
+                            </li>
+</ul>
+</div>
+<div class="md:col-span-5 md:col-start-8 order-1 md:order-2 mb-12 md:mb-0 relative">
+<div class="absolute -inset-4 border border-outline-variant rounded-DEFAULT pointer-events-none hidden md:block"></div>
+<img alt="" class="w-full aspect-[4/5] object-cover grayscale matte-image shadow-sm" data-alt="A close-up, high-contrast black and white shot of vintage analog camera equipment resting on a textured vellum surface. The image emphasizes the tactile nature of film photography, with sharp focus on the dials and lenses, set against a stark, minimalist white background. The composition exudes a premium, editorial elegance characteristic of a luxury studio." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3mUJjTQVqiiaa0_4vWzrZCASMO-MDfF0j1fuOJ3V0SzPEzxqFC3GYXGDsma2oA4_qtyGrDUwYoap3DVtn5OmF8J84ijLH2nj3Lq83aGJXvOlpK3rDMB472zubUs-Qkb806ai83Ud8DNDYc9jZ3gykO8-9nh5mFnuYJjaUMNDy7VYj1jAY3lMeNhFhMwgMMjBHxEAqCvIRWOCZDRH_8cn4_W0vBfsyHEaYpRpOl_sHsTrtO0iqTDb5ly-5906u61zINMMTTt3Bh7s"/>
+</div>
+</div>
+</div>
+</section>
+<!-- Portfolio Glimpses -->
+<section class="py-32 px-margin-mobile md:px-margin-desktop bg-surface border-t border-outline-variant">
+<div class="max-w-container-max mx-auto">
+<div class="flex flex-col md:flex-row justify-between items-end mb-16 gap-8 border-b border-outline-variant pb-8">
+<div>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest mb-4 block">Archive</span>
+<h2 class="font-headline-lg md:font-display-lg text-headline-lg md:text-display-lg text-primary">Curated Glimpses</h2>
+</div>
+<button class="flex items-center gap-2 font-label-lg text-label-lg text-primary hover:opacity-70 transition-opacity">
+                        View Full Portfolio <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+<div class="group cursor-pointer">
+<div class="overflow-hidden border border-outline-variant aspect-[3/4] mb-4 bg-surface-container">
+<img alt="" class="w-full h-full object-cover grayscale group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="A striking black and white portrait of a couple in formal evening wear, captured in a minimalist studio setting. The lighting is dramatic, creating deep shadows and high contrast that highlight their expressions. The image has a subtle film grain texture, evoking a sense of classic, nostalgic romance and high-end editorial photography." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDFu7wkcrNVBbwG-SX3w2Ajf9Fv2Ui9aS7XVtoLBw0AMwY6PaYbrRApeo8E0Ext1F_54WizqhSJWtStQtqyZGEiIXcxHtrkV7suAMauispsMZ_HNVX7dhyhpL_Qp6AOJMR1pdnMLDAL8VSLts5nGaDSjnO7nqy2pHDYRYUMc4s6EBuyln40S3QWzaHXE0DVp5luue-S2NLwFDGNhq750cMhHnqwbTAMfm3xQBUs4G6P_s1XdK7Ml9Pw0uj3UsmtxxeOmtT4xOd9spU"/>
+</div>
+<div class="flex justify-between items-baseline font-label-sm text-label-sm">
+<h3 class="font-headline-sm text-headline-sm text-primary group-hover:underline decoration-1 underline-offset-4">The Gala</h3>
+<span class="text-secondary">01</span>
+</div>
+</div>
+<div class="group cursor-pointer md:mt-12">
+<div class="overflow-hidden border border-outline-variant aspect-[3/4] mb-4 bg-surface-container">
+<img alt="" class="w-full h-full object-cover grayscale group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="An artistic, blurred black and white photograph capturing motion during a sophisticated event. The figures are slightly out of focus, conveying a sense of energy, fleeting moments, and elegant chaos. The stark contrast and grainy texture give the image a timeless, documentary-style aesthetic reminiscent of classic photojournalism." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLQ3iUJsmnOLrlkkCU12kr7I0VknwwN7bjGXCVmX-LgNeE6UP_u15TiKY4_pENgmyIK3cZrtDzOklphUHQ4SiEGWkMXIkXlmCwx9woM7yOSBTR4ZNgQoBgl0hCgGb3FYBU6AX3aS7wyX8xfzkfeEObMNm18aMQMEdx5s-09ekrxKD_FlIklt3fuWCJodXXNx4dKwEqhFAIgmoxFnwm8xhmVbTqjihqlwLNdL_31XwjnwnC416XA-LHqzQFtnNV7IXeVEl2tQCx_h8"/>
+</div>
+<div class="flex justify-between items-baseline font-label-sm text-label-sm">
+<h3 class="font-headline-sm text-headline-sm text-primary group-hover:underline decoration-1 underline-offset-4">Fleeting Motions</h3>
+<span class="text-secondary">02</span>
+</div>
+</div>
+<div class="group cursor-pointer md:-mt-6">
+<div class="overflow-hidden border border-outline-variant aspect-[3/4] mb-4 bg-surface-container">
+<img alt="" class="w-full h-full object-cover grayscale group-hover:scale-105 transition-transform duration-700 ease-out" data-alt="A minimalist, close-up shot of intertwined hands resting against a pure white background, rendered in high-contrast black and white. The focus is sharp on the texture of the skin and the subtle play of light and shadow, highlighting intimacy and connection. The overall mood is quiet, tender, and beautifully austere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwGBKrzH8CAlkhOg53GJd9fIhjXQ9nmdomfhkwm745X8CNIJ7nHr-l833yXTlRkGFNE9MN3Tdy9oi-2AoI9_2hYFX399PapQO-J42tm9U_bySZKWdh7M19wJkotKcXKWFNoknbCajoAaKON1lrnVb4wp034hxxVFooGDxgn8gjTlRUIqQ323bLBYOusO5eUyZ6_xfXX5bj1GMOi1D4wAkLf90wK5f4j-yPRy5xPgQ1vgbwAsItJR1PBLJ414LkhbdZRFVhO1HN7qw"/>
+</div>
+<div class="flex justify-between items-baseline font-label-sm text-label-sm">
+<h3 class="font-headline-sm text-headline-sm text-primary group-hover:underline decoration-1 underline-offset-4">Quiet Details</h3>
+<span class="text-secondary">03</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Newsletter Section -->
+<section class="py-32 px-margin-mobile md:px-margin-desktop bg-primary text-on-primary relative overflow-hidden">
+<div class="noise-overlay" style="opacity: 0.15; filter: invert(1);"></div>
+<div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 50% 50%, var(--tw-colors-surface-tint) 1px, transparent 1px); background-size: 24px 24px;"></div>
+<div class="relative z-20 max-w-2xl mx-auto text-center flex flex-col items-center">
+<span class="material-symbols-outlined text-4xl mb-6 font-light">ink_pen</span>
+<h2 class="font-headline-lg md:font-display-lg text-headline-lg md:text-display-lg mb-6 leading-tight">Join the<br/>Registry.</h2>
+<p class="font-body-md text-body-md text-on-primary/80 mb-12 font-light max-w-md">
+                    Subscribe to receive musings on modern aesthetics, early access to new studio installations, and exclusive booking windows.
+                </p>
+<form class="w-full max-w-md flex flex-col gap-6">
+<div class="relative border-b border-on-primary/30 pb-2 focus-within:border-on-primary transition-colors">
+<label class="absolute -top-4 left-0 font-label-sm text-label-sm text-on-primary/60 uppercase tracking-widest transition-all" for="email">Email Address</label>
+<input class="w-full bg-transparent border-none focus:ring-0 text-on-primary font-body-lg text-body-lg p-0 h-8 placeholder-transparent" id="email" placeholder="Email Address" required="" type="email"/>
+</div>
+<button class="w-full bg-surface text-primary py-4 font-label-lg text-label-lg rounded-DEFAULT hover:bg-surface-variant transition-colors tracking-widest uppercase mt-4" type="submit">
+                        Subscribe
+                    </button>
+</form>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface border-t border-outline-variant full-width bottom-0 flat no shadows py-margin-desktop px-margin-mobile md:px-margin-desktop">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter max-w-container-max mx-auto items-center">
+<div class="font-display-mobile text-display-mobile text-primary">
+                Mémoire
+            </div>
+<div class="font-body-md text-body-md text-secondary text-center md:text-left font-light">
+                © 2024 Mémoire. Memories, Inked in Time.
+            </div>
+<nav class="flex justify-center md:justify-end gap-6 font-label-sm text-label-sm uppercase tracking-widest">
+<a class="text-on-surface-variant hover:underline decoration-outline underline-offset-4 transition-all opacity-70 hover:opacity-100 transition-opacity" href="#">Instagram</a>
+<a class="text-on-surface-variant hover:underline decoration-outline underline-offset-4 transition-all opacity-70 hover:opacity-100 transition-opacity" href="#">Pinterest</a>
+<a class="text-on-surface-variant hover:underline decoration-outline underline-offset-4 transition-all opacity-70 hover:opacity-100 transition-opacity" href="#">Privacy</a>
+<a class="text-on-surface-variant hover:underline decoration-outline underline-offset-4 transition-all opacity-70 hover:opacity-100 transition-opacity" href="#">Terms</a>
+</nav>
+</div>
+</footer>
+<script>
+        // Simple input label interaction
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                input.previousElementSibling.classList.add('text-on-primary', 'opacity-100');
+            });
+            input.addEventListener('blur', () => {
+                if(!input.value) {
+                    input.previousElementSibling.classList.remove('text-on-primary', 'opacity-100');
+                }
+            });
+        });
+    </script>
+</body></html>

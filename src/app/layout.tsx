@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit } from "next/font/google";
+import { Outfit, Libre_Caslon_Text, Manrope } from "next/font/google";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -7,9 +7,21 @@ const outfit = Outfit({
   subsets: ["latin"],
 });
 
+const libreCaslonText = Libre_Caslon_Text({
+  weight: ["400", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-libre-caslon-text",
+  subsets: ["latin"],
+});
+
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "Piawai Photobooth",
-  description: "Unduh foto Photobooth kamu di sini!",
+  title: "Mémoire | Memories, Inked in Time",
+  description: "A highly curated, tactile photobooth experience designed for elegant gatherings.",
 };
 
 export default function RootLayout({
@@ -20,9 +32,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${outfit.variable} font-sans h-full antialiased`}
+      className={`${outfit.variable} ${libreCaslonText.variable} ${manrope.variable} font-sans h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
+        {children}
+      </body>
     </html>
   );
 }

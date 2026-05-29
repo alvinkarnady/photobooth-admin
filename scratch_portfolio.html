@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Portfolio - Mémoire</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-primary-fixed": "#1c1b1b",
+                        "on-secondary-fixed-variant": "#474744",
+                        "on-background": "#1b1c1c",
+                        "inverse-primary": "#c8c6c5",
+                        "surface-container": "#efeded",
+                        "on-primary": "#ffffff",
+                        "surface": "#fbf9f8",
+                        "tertiary": "#000000",
+                        "error": "#ba1a1a",
+                        "tertiary-fixed": "#e6e2dc",
+                        "surface-container-lowest": "#ffffff",
+                        "on-primary-fixed-variant": "#474746",
+                        "surface-dim": "#dbd9d9",
+                        "surface-container-highest": "#e4e2e2",
+                        "primary": "#000000",
+                        "surface-tint": "#5f5e5e",
+                        "background": "#fbf9f8",
+                        "on-secondary": "#ffffff",
+                        "tertiary-fixed-dim": "#cac6c0",
+                        "secondary-fixed": "#e4e2dd",
+                        "error-container": "#ffdad6",
+                        "on-tertiary": "#ffffff",
+                        "outline": "#747878",
+                        "inverse-on-surface": "#f2f0f0",
+                        "surface-container-high": "#eae8e7",
+                        "on-surface": "#1b1c1c",
+                        "on-surface-variant": "#444748",
+                        "surface-container-low": "#f5f3f3",
+                        "primary-fixed": "#e5e2e1",
+                        "surface-variant": "#e4e2e2",
+                        "secondary-fixed-dim": "#c8c6c2",
+                        "on-error-container": "#93000a",
+                        "on-tertiary-fixed": "#1c1c18",
+                        "inverse-surface": "#303030",
+                        "secondary-container": "#e1dfdb",
+                        "on-tertiary-fixed-variant": "#484742",
+                        "tertiary-container": "#1c1c18",
+                        "on-secondary-container": "#63635f",
+                        "on-primary-container": "#858383",
+                        "outline-variant": "#c4c7c7",
+                        "surface-bright": "#fbf9f8",
+                        "secondary": "#5e5e5b",
+                        "on-secondary-fixed": "#1b1c19",
+                        "on-tertiary-container": "#86837e",
+                        "primary-fixed-dim": "#c8c6c5",
+                        "primary-container": "#1c1b1b",
+                        "on-error": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "unit": "8px",
+                        "gutter": "24px",
+                        "margin-desktop": "64px",
+                        "container-max": "1280px",
+                        "margin-mobile": "20px"
+                    },
+                    "fontFamily": {
+                        "display-lg": ["Libre Caslon Text"],
+                        "label-lg": ["Manrope"],
+                        "display-mobile": ["Libre Caslon Text"],
+                        "label-sm": ["Manrope"],
+                        "body-lg": ["Manrope"],
+                        "headline-md": ["Libre Caslon Text"],
+                        "headline-lg": ["Libre Caslon Text"],
+                        "body-md": ["Manrope"],
+                        "headline-sm": ["Libre Caslon Text"]
+                    },
+                    "fontSize": {
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "400" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.1em", "fontWeight": "600" }],
+                        "display-mobile": ["40px", { "lineHeight": "48px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "400" }],
+                        "headline-lg": ["48px", { "lineHeight": "56px", "fontWeight": "400" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.background');
+            color: theme('colors.on-background');
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* Ink Spread Hover Effect for Images */
+        .ink-hover-container {
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .ink-hover-container::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.6s ease-out, height 0.6s ease-out, opacity 0.4s ease-out;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        .ink-hover-container:hover::before {
+            width: 300%;
+            height: 300%;
+            opacity: 1;
+        }
+        
+        .ink-hover-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 24px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.4s ease-out 0.2s;
+            z-index: 20;
+            color: theme('colors.on-primary');
+        }
+        
+        .ink-hover-container:hover .ink-hover-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .ink-hover-container img {
+            transition: transform 0.8s ease;
+        }
+        .ink-hover-container:hover img {
+            transform: scale(1.05);
+        }
+
+        /* Subtle Noise Overlay for Inked Texture */
+        .noise-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0.03;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+        
+        .matte-border {
+            border: 12px solid theme('colors.on-primary');
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col relative">
+<div class="noise-overlay"></div>
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-background docked full-width top-0 border-b border-outline-variant flat no shadows z-50 sticky">
+<div class="flex justify-between items-center w-full h-20 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<a class="font-display-lg text-display-mobile md:text-display-lg text-primary dark:text-on-surface tracking-tighter" href="#">Mémoire</a>
+<nav class="hidden md:flex items-center gap-8">
+<a class="font-label-lg text-label-lg text-secondary dark:text-on-secondary-container hover:text-primary dark:hover:text-on-surface transition-colors duration-300 scale-95 active:opacity-80 transition-all" href="#">Home</a>
+<a class="font-label-lg text-label-lg text-secondary dark:text-on-secondary-container hover:text-primary dark:hover:text-on-surface transition-colors duration-300 scale-95 active:opacity-80 transition-all" href="#">Services</a>
+<a class="font-label-lg text-label-lg text-primary dark:text-on-surface border-b border-primary dark:border-on-surface pb-1 scale-95 active:opacity-80 transition-all" href="#">Portfolio</a>
+<a class="font-label-lg text-label-lg text-secondary dark:text-on-secondary-container hover:text-primary dark:hover:text-on-surface transition-colors duration-300 scale-95 active:opacity-80 transition-all" href="#">Contact</a>
+</nav>
+<button class="hidden md:block bg-primary text-on-primary font-label-lg text-label-lg px-6 py-3 rounded-none hover:bg-on-primary-fixed-variant transition-colors">Book Now</button>
+<!-- Mobile Menu Toggle -->
+<button class="md:hidden text-primary">
+<span class="material-symbols-outlined" style="font-size: 28px;">menu</span>
+</button>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-container-max mx-auto px-margin-mobile md:px-margin-desktop pt-16 pb-32">
+<!-- Header Section -->
+<section class="mb-20 md:mb-32 max-w-3xl">
+<h1 class="font-display-mobile text-display-mobile md:font-display-lg md:text-display-lg text-primary mb-6">Inked in Time.</h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl leading-relaxed">
+                A curated gallery of moments captured through our lens. Monochromatic, timeless, and beautifully imperfect. Explore our portfolio of weddings, galas, and intimate gatherings.
+            </p>
+</section>
+<!-- Filters -->
+<section class="mb-12 border-b border-outline-variant pb-6 flex flex-wrap gap-6 items-center">
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Filter by:</span>
+<div class="flex gap-4 flex-wrap">
+<button class="font-label-lg text-label-lg text-primary border-b-2 border-primary pb-1">All Events</button>
+<button class="font-label-lg text-label-lg text-on-surface-variant hover:text-primary transition-colors pb-1">Weddings</button>
+<button class="font-label-lg text-label-lg text-on-surface-variant hover:text-primary transition-colors pb-1">Galas</button>
+<button class="font-label-lg text-label-lg text-on-surface-variant hover:text-primary transition-colors pb-1">Private</button>
+<button class="font-label-lg text-label-lg text-on-surface-variant hover:text-primary transition-colors pb-1">Editorial</button>
+</div>
+</section>
+<!-- Masonry Grid -->
+<div class="columns-1 md:columns-2 lg:columns-3 gap-gutter space-y-gutter">
+<!-- Item 1 (Tall) -->
+<div class="break-inside-avoid mb-gutter">
+<div class="ink-hover-container matte-border border border-outline-variant cursor-pointer group">
+<img alt="Wedding portrait" class="w-full h-auto object-cover block grayscale" data-alt="A striking black and white portrait of a newlywed couple in a classic photobooth. The lighting is high-contrast, emphasizing deep blacks and crisp whites, capturing an elegant, nostalgic mood. The overall aesthetic is minimal, high-end editorial with a tactile, vintage film quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBf3MuKXvKTCpZP04Vj_oLCzKCCKed1N4E64Gf7jzPeM5XvIt04yupc3ro8VshDMMmqFBVpafNrzd6RGeUa7YFkszqANxkrIrwpMiba1LLt75cKK7GSfbDc8PxvfB_CSbTfDEAHe42Xr9GjptAJYO5IaHq3S89_FvYrY6qouRAVJOoSvcDq8GuUGPzVq84RQeovpXdjLYW5sd4rsSHBwbTKoYWZIgHg1prDo31BygaywE5KF_DnOXAi_nuLDMVTukUTPG2r2d4JnTE"/>
+<div class="ink-hover-content">
+<h3 class="font-headline-sm text-headline-sm mb-1">The Anderson Wedding</h3>
+<p class="font-label-sm text-label-sm uppercase tracking-widest opacity-80">New York, 2023</p>
+</div>
+</div>
+</div>
+<!-- Item 2 (Square) -->
+<div class="break-inside-avoid mb-gutter">
+<div class="ink-hover-container matte-border border border-outline-variant cursor-pointer group">
+<img alt="Gala guests" class="w-full h-auto object-cover block grayscale" data-alt="A candid black and white shot of guests laughing in a photobooth at a formal gala. The flash lighting creates sharp shadows and bright highlights, reminiscent of classic paparazzi photography. The mood is joyous and sophisticated, aligning perfectly with a premium, monochromatic digital aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAnFiYSPyzICG-neRL9i-OuPLSIUw674zm7JqeMDUXUBvI8nf26EmeyjufIYbD4Znk2Cx_mH4AS_3dRNNDmmkmwmJvHacDgYCDsorCLOpCXnIFv3KMnINaTwFQsgKsHmUYANrGipcmqTMFqdIe-5QJVpc6OqDmU3mENlz2zUHG2i_8hpipFzgznJ30_bazeTRkVzV9GkPnep8PtNn--LU47q5uGvFrA_IrO2QCSefetpFnT2UfwMgS06E7f8hjPJa0wet7W8wz6DeY"/>
+<div class="ink-hover-content">
+<h3 class="font-headline-sm text-headline-sm mb-1">Metropolitan Gala</h3>
+<p class="font-label-sm text-label-sm uppercase tracking-widest opacity-80">London, 2024</p>
+</div>
+</div>
+</div>
+<!-- Item 3 (Wide) -->
+<div class="break-inside-avoid mb-gutter">
+<div class="ink-hover-container matte-border border border-outline-variant cursor-pointer group">
+<img alt="Bride and Groom" class="w-full h-auto object-cover block grayscale" data-alt="A dramatic black and white image of a bride and groom sharing a quiet moment, framed as if taken in an old-school photobooth. The lighting is soft but contrasty, highlighting the textures of the wedding attire. The image has a subtle grain, evoking a timeless, tactile, inked-on-paper feeling." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBV8AGsr4LAaJKU-ravAjxtBwaOrcYdZ4p3COobCVWM0sMWIq6nKNPxdHzwLtiaXvIp8JBfQ2DmG8c-5WLgrpFp4O3Q1Y8uSosyWe8ybLGx2MSKQ1tYOm4oYkF6UpLH7YNrDyhwSvGOyzd-lIXVNxtzan6UdIfZ8NTahIV5t0LDnGL7U4qzRAEESMTGgImNs14jkHNa-nz0UZXk8tTShzQylhrS72VGkDaDRi7HlDZWUhpNhf9wEXE8oSYscE5m2hFsB3y6bInwBRo"/>
+<div class="ink-hover-content">
+<h3 class="font-headline-sm text-headline-sm mb-1">Estate Celebration</h3>
+<p class="font-label-sm text-label-sm uppercase tracking-widest opacity-80">Tuscany, 2023</p>
+</div>
+</div>
+</div>
+<!-- Item 4 (Square) -->
+<div class="break-inside-avoid mb-gutter">
+<div class="ink-hover-container matte-border border border-outline-variant cursor-pointer group">
+<img alt="Party guests" class="w-full h-auto object-cover block grayscale" data-alt="A high-contrast black and white photograph of friends posing playfully in a photobooth at a private party. The stark lighting creates a modern, editorial vibe with deep, inky shadows. The aesthetic is clean, minimalist, and emotionally resonant, capturing a fleeting memory perfectly." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDVWvUNcACJ25u93NsHGWcUWUxiGE2pfAIbTpJnYU5st2t5A2FuepAW_x5kXqpuXZhrerYMXv4I2_a9799_V-QE7Z3J0D5Iq1rwe8-QTcwWKnA94bHzvfL5_rotOeoRW0Ov74dgvA6FnrUndShgFIbOZxR1aq5lJyMAQ8zVeQJb6a8KXHNXybaKFOoZ7Cd4lcrAVMzVsAo7BWZWALKWAS2zLrjPAoOQZeQddAnimtCkts1n46qrCWybE_slOoApHuOF4-gqiSCGcvk"/>
+<div class="ink-hover-content">
+<h3 class="font-headline-sm text-headline-sm mb-1">Midnight Soirée</h3>
+<p class="font-label-sm text-label-sm uppercase tracking-widest opacity-80">Paris, 2024</p>
+</div>
+</div>
+</div>
+<!-- Item 5 (Tall) -->
+<div class="break-inside-avoid mb-gutter">
+<div class="ink-hover-container matte-border border border-outline-variant cursor-pointer group">
+<img alt="Fashion portrait" class="w-full h-auto object-cover block grayscale" data-alt="An editorial-style black and white portrait of a woman in evening wear inside a photobooth. The composition is tight and minimalist, with stark lighting that emphasizes elegant facial features and the texture of the fabric. The image feels like a high-end magazine tear sheet, rich with tactile, inky grain." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB-dOsqxXpYiBuAheWCEt5apfAeEh93UL_eUHLaysk57CItaM8uqBms2YrD4M7SECfCqx5IRA2kORhMNLTnmG75hO2ThjNPiDu5EwMKSCilmsL9tHmdA7-ucJh-ZYkL_2k1jGEiO8zEkJvU9H8H1DWJP3w9S4ssgq7I5VKKG3BGV1zKW2KsPqu35e6du4CMPz_r2Nbe4cpCx2NrZRvZkstPlpXpOTLUqbthy1-sbkM5cVF-FSXuYUaBxJtKn1fTX8C8Zot5d8cqIVQ"/>
+<div class="ink-hover-content">
+<h3 class="font-headline-sm text-headline-sm mb-1">Vogue Afterparty</h3>
+<p class="font-label-sm text-label-sm uppercase tracking-widest opacity-80">Milan, 2023</p>
+</div>
+</div>
+</div>
+<!-- Item 6 (Wide) -->
+<div class="break-inside-avoid mb-gutter">
+<div class="ink-hover-container matte-border border border-outline-variant cursor-pointer group">
+<img alt="Group shot" class="w-full h-auto object-cover block grayscale" data-alt="A chaotic, joyful black and white group shot squeezed into a photobooth frame. The harsh flash creates a spontaneous, documentary feel with deep blacks and bright whites. The image possesses a raw, physical quality, reminiscent of vintage film strips, fitting perfectly into a premium, minimalist digital gallery." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdCOdLnAN3glvFj0JJ3BpF0xaleroZ-Xw5P_invK_bROYdr3AvDmFNtC8k0TcPRE7QiOr09WYaA-j-BFqEFjzKzbISA8GUeazRLnMpj9H_dtRmz0fBD9Q8KRZSP_OcNLLd0fOXBnNx7Iyj2v4PnkTAOt6KrqJ7jepZFd80hLTidTp6oxQKOmrnbkRp4-C4sdI8WTX0R4wRrXQZXWQFpxtLcgFRAVTQNr2VgM39iABBtPnn_GlSiKKZTgIYPyUz7NfGxoTBK01iThc"/>
+<div class="ink-hover-content">
+<h3 class="font-headline-sm text-headline-sm mb-1">The Summer Edit</h3>
+<p class="font-label-sm text-label-sm uppercase tracking-widest opacity-80">Los Angeles, 2022</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Load More -->
+<div class="mt-20 flex justify-center">
+<button class="bg-transparent border border-primary text-primary font-label-lg text-label-lg px-8 py-4 hover:bg-primary hover:text-on-primary transition-colors duration-300">
+                Load More Memories
+            </button>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface dark:bg-background full-width bottom-0 border-t border-outline-variant flat no shadows mt-auto">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter py-margin-desktop px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto items-center">
+<div class="text-center md:text-left">
+<span class="font-display-mobile text-display-mobile md:font-display-mobile text-primary dark:text-on-surface tracking-tighter block mb-2">Mémoire</span>
+<p class="font-body-md text-body-md text-primary dark:text-on-surface">© 2024 Mémoire. Memories, Inked in Time.</p>
+</div>
+<div class="flex justify-center md:justify-center gap-6">
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-secondary-container hover:underline decoration-outline underline-offset-4 transition-all opacity-70 hover:opacity-100" href="#">Instagram</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-secondary-container hover:underline decoration-outline underline-offset-4 transition-all opacity-70 hover:opacity-100" href="#">Pinterest</a>
+</div>
+<div class="flex justify-center md:justify-end gap-6">
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-secondary-container hover:underline decoration-outline underline-offset-4 transition-all opacity-70 hover:opacity-100" href="#">Privacy</a>
+<a class="font-label-sm text-label-sm text-on-surface-variant dark:text-on-secondary-container hover:underline decoration-outline underline-offset-4 transition-all opacity-70 hover:opacity-100" href="#">Terms</a>
+</div>
+</div>
+</footer>
+</body></html>

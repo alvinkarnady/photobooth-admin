@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Services &amp; Pricing - Mémoire</title>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-fixed": "#1c1b1b",
+                      "on-secondary-fixed-variant": "#474744",
+                      "on-background": "#1b1c1c",
+                      "inverse-primary": "#c8c6c5",
+                      "surface-container": "#efeded",
+                      "on-primary": "#ffffff",
+                      "surface": "#fbf9f8",
+                      "tertiary": "#000000",
+                      "error": "#ba1a1a",
+                      "tertiary-fixed": "#e6e2dc",
+                      "surface-container-lowest": "#ffffff",
+                      "on-primary-fixed-variant": "#474746",
+                      "surface-dim": "#dbd9d9",
+                      "surface-container-highest": "#e4e2e2",
+                      "primary": "#000000",
+                      "surface-tint": "#5f5e5e",
+                      "background": "#fbf9f8",
+                      "on-secondary": "#ffffff",
+                      "tertiary-fixed-dim": "#cac6c0",
+                      "secondary-fixed": "#e4e2dd",
+                      "error-container": "#ffdad6",
+                      "on-tertiary": "#ffffff",
+                      "outline": "#747878",
+                      "inverse-on-surface": "#f2f0f0",
+                      "surface-container-high": "#eae8e7",
+                      "on-surface": "#1b1c1c",
+                      "on-surface-variant": "#444748",
+                      "surface-container-low": "#f5f3f3",
+                      "primary-fixed": "#e5e2e1",
+                      "surface-variant": "#e4e2e2",
+                      "secondary-fixed-dim": "#c8c6c2",
+                      "on-error-container": "#93000a",
+                      "on-tertiary-fixed": "#1c1c18",
+                      "inverse-surface": "#303030",
+                      "secondary-container": "#e1dfdb",
+                      "on-tertiary-fixed-variant": "#484742",
+                      "tertiary-container": "#1c1c18",
+                      "on-secondary-container": "#63635f",
+                      "on-primary-container": "#858383",
+                      "outline-variant": "#c4c7c7",
+                      "surface-bright": "#fbf9f8",
+                      "secondary": "#5e5e5b",
+                      "on-secondary-fixed": "#1b1c19",
+                      "on-tertiary-container": "#86837e",
+                      "primary-fixed-dim": "#c8c6c5",
+                      "primary-container": "#1c1b1b",
+                      "on-error": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "unit": "8px",
+                      "gutter": "24px",
+                      "margin-desktop": "64px",
+                      "container-max": "1280px",
+                      "margin-mobile": "20px"
+              },
+              "fontFamily": {
+                      "display-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-lg": [
+                              "Manrope"
+                      ],
+                      "display-mobile": [
+                              "Libre Caslon Text"
+                      ],
+                      "label-sm": [
+                              "Manrope"
+                      ],
+                      "body-lg": [
+                              "Manrope"
+                      ],
+                      "headline-md": [
+                              "Libre Caslon Text"
+                      ],
+                      "headline-lg": [
+                              "Libre Caslon Text"
+                      ],
+                      "body-md": [
+                              "Manrope"
+                      ],
+                      "headline-sm": [
+                              "Libre Caslon Text"
+                      ]
+              },
+              "fontSize": {
+                      "display-lg": [
+                              "64px",
+                              {
+                                      "lineHeight": "72px",
+                                      "letterSpacing": "-0.02em",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-lg": [
+                              "14px",
+                              {
+                                      "lineHeight": "20px",
+                                      "letterSpacing": "0.1em",
+                                      "fontWeight": "600"
+                              }
+                      ],
+                      "display-mobile": [
+                              "40px",
+                              {
+                                      "lineHeight": "48px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "label-sm": [
+                              "12px",
+                              {
+                                      "lineHeight": "16px",
+                                      "letterSpacing": "0.05em",
+                                      "fontWeight": "500"
+                              }
+                      ],
+                      "body-lg": [
+                              "18px",
+                              {
+                                      "lineHeight": "28px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-md": [
+                              "32px",
+                              {
+                                      "lineHeight": "40px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-lg": [
+                              "48px",
+                              {
+                                      "lineHeight": "56px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "body-md": [
+                              "16px",
+                              {
+                                      "lineHeight": "24px",
+                                      "fontWeight": "400"
+                              }
+                      ],
+                      "headline-sm": [
+                              "24px",
+                              {
+                                      "lineHeight": "32px",
+                                      "fontWeight": "400"
+                              }
+                      ]
+              }
+      },
+          },
+        }
+      </script>
+<style>
+        .noise-bg {
+            position: relative;
+        }
+        .noise-bg::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 10;
+        }
+      </style>
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased selection:bg-primary selection:text-on-primary">
+<!-- TopAppBar -->
+<nav class="bg-surface border-b border-outline-variant w-full sticky top-0 z-50">
+<div class="flex justify-between items-center w-full h-20 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<!-- Brand Logo -->
+<a class="font-display-lg text-headline-sm md:text-display-lg text-primary tracking-tighter hover:opacity-80 transition-opacity" href="#">
+                Mémoire
+            </a>
+<!-- Navigation Links (Desktop) -->
+<div class="hidden md:flex space-x-8 items-center font-label-lg text-label-lg">
+<a class="text-secondary hover:text-primary transition-colors duration-300" href="#">Home</a>
+<!-- Active Navigation Item -->
+<a class="text-primary border-b border-primary pb-1" href="#">Services</a>
+<a class="text-secondary hover:text-primary transition-colors duration-300" href="#">Portfolio</a>
+<a class="text-secondary hover:text-primary transition-colors duration-300" href="#">Contact</a>
+</div>
+<!-- Trailing Action -->
+<button class="hidden md:block bg-primary text-on-primary font-label-lg text-label-lg px-6 py-3 hover:bg-on-surface-variant transition-colors scale-95 active:opacity-80">
+                Book Now
+            </button>
+<!-- Mobile Menu Button -->
+<button class="md:hidden text-primary p-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 0;">menu</span>
+</button>
+</div>
+</nav>
+<main class="w-full">
+<!-- Hero Section -->
+<section class="py-24 md:py-32 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto text-center">
+<h1 class="font-display-mobile text-display-mobile md:font-display-lg md:text-display-lg text-primary mb-6 max-w-3xl mx-auto">
+                Curated Experiences,<br/>Transparently Priced.
+            </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">
+                Elevate your event with our bespoke photobooth services. From classic elegance to editorial perfection, choose the narrative that suits your celebration.
+            </p>
+</section>
+<!-- Packages Bento Grid -->
+<section class="px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto pb-32">
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-gutter">
+<!-- Package 1: The Classic -->
+<div class="border border-outline-variant p-8 flex flex-col justify-between bg-surface group hover:border-primary transition-colors duration-500">
+<div>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest mb-4 block">Essential Coverage</span>
+<h2 class="font-headline-md text-headline-md text-primary mb-2">The Classic</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8 h-16">
+                            Perfect for intimate gatherings requiring a touch of refined fun.
+                        </p>
+<div class="mb-8">
+<span class="font-headline-sm text-headline-sm text-primary">$850</span>
+</div>
+<div class="space-y-4 mb-12">
+<div class="flex items-start">
+<span class="material-symbols-outlined text-secondary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 0;">schedule</span>
+<span class="font-body-md text-body-md text-on-surface">3 Hours of Service</span>
+</div>
+<div class="flex items-start">
+<span class="material-symbols-outlined text-secondary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 0;">photo_prints</span>
+<span class="font-body-md text-body-md text-on-surface">Unlimited 2x6 Prints</span>
+</div>
+<div class="flex items-start">
+<span class="material-symbols-outlined text-secondary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 0;">gallery_thumbnail</span>
+<span class="font-body-md text-body-md text-on-surface">Standard Digital Gallery</span>
+</div>
+<div class="flex items-start">
+<span class="material-symbols-outlined text-secondary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 0;">wallpaper</span>
+<span class="font-body-md text-body-md text-on-surface">Choice of 3 House Backdrops</span>
+</div>
+</div>
+</div>
+<button class="w-full border border-primary text-primary font-label-lg text-label-lg py-4 hover:bg-primary hover:text-on-primary transition-colors duration-300">
+                        Select Classic
+                    </button>
+</div>
+<!-- Package 2: The Editorial (Highlighted) -->
+<div class="border border-primary bg-surface-container-low p-8 flex flex-col justify-between relative transform lg:-translate-y-4 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)]">
+<div class="absolute top-0 right-8 -translate-y-1/2 bg-primary text-on-primary font-label-sm text-label-sm px-4 py-1 uppercase tracking-widest">
+                        Most Popular
+                    </div>
+<div>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest mb-4 block">Complete Experience</span>
+<h2 class="font-headline-md text-headline-md text-primary mb-2">The Editorial</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8 h-16">
+                            A magazine-worthy setup with premium aesthetics and dedicated styling.
+                        </p>
+<div class="mb-8">
+<span class="font-headline-sm text-headline-sm text-primary">$1,200</span>
+</div>
+<div class="space-y-4 mb-12">
+<div class="flex items-start">
+<span class="material-symbols-outlined text-primary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 1;">schedule</span>
+<span class="font-body-md text-body-md text-on-surface">4 Hours of Service</span>
+</div>
+<div class="flex items-start">
+<span class="material-symbols-outlined text-primary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 1;">photo_prints</span>
+<span class="font-body-md text-body-md text-on-surface">Unlimited 4x6 Prints</span>
+</div>
+<div class="flex items-start">
+<span class="material-symbols-outlined text-primary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 1;">photo_library</span>
+<span class="font-body-md text-body-md text-on-surface">Curated Online Gallery</span>
+</div>
+<div class="flex items-start">
+<span class="material-symbols-outlined text-primary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 1;">palette</span>
+<span class="font-body-md text-body-md text-on-surface">Premium Textured Backdrop</span>
+</div>
+<div class="flex items-start">
+<span class="material-symbols-outlined text-primary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 1;">masks</span>
+<span class="font-body-md text-body-md text-on-surface">Minimalist Prop Selection</span>
+</div>
+</div>
+</div>
+<button class="w-full bg-primary text-on-primary font-label-lg text-label-lg py-4 hover:bg-on-surface-variant transition-colors duration-300">
+                        Select Editorial
+                    </button>
+</div>
+<!-- Package 3: The Heirloom -->
+<div class="border border-outline-variant p-8 flex flex-col justify-between bg-surface group hover:border-primary transition-colors duration-500">
+<div>
+<span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest mb-4 block">Bespoke Design</span>
+<h2 class="font-headline-md text-headline-md text-primary mb-2">The Heirloom</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mb-8 h-16">
+                            Fully custom art direction tailored seamlessly to your event's branding.
+                        </p>
+<div class="mb-8">
+<span class="font-headline-sm text-headline-sm text-primary">Custom Quote</span>
+</div>
+<div class="space-y-4 mb-12">
+<div class="flex items-start">
+<span class="material-symbols-outlined text-secondary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 0;">all_inclusive</span>
+<span class="font-body-md text-body-md text-on-surface">Unlimited Hours</span>
+</div>
+<div class="flex items-start">
+<span class="material-symbols-outlined text-secondary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 0;">auto_awesome</span>
+<span class="font-body-md text-body-md text-on-surface">Custom Designed Backdrop</span>
+</div>
+<div class="flex items-start">
+<span class="material-symbols-outlined text-secondary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 0;">book</span>
+<span class="font-body-md text-body-md text-on-surface">Linen Guestbook Included</span>
+</div>
+<div class="flex items-start">
+<span class="material-symbols-outlined text-secondary mr-3 text-[20px]" style="font-variation-settings: 'FILL' 0;">support_agent</span>
+<span class="font-body-md text-body-md text-on-surface">Dedicated Creative Director</span>
+</div>
+</div>
+</div>
+<button class="w-full border border-primary text-primary font-label-lg text-label-lg py-4 hover:bg-primary hover:text-on-primary transition-colors duration-300">
+                        Inquire Now
+                    </button>
+</div>
+</div>
+</section>
+<!-- Divider with Image -->
+<section class="w-full h-64 md:h-96 bg-surface-variant relative overflow-hidden mb-32">
+<div class="absolute inset-0 bg-cover bg-center opacity-80" data-alt="A close-up, highly detailed shot of black ink gracefully swirling and blooming within a clear glass of water, set against a stark, high-contrast white background. The lighting is bright and editorial, emphasizing the delicate, almost translucent tendrils of the ink as it dissipates. The mood is sophisticated, capturing a fleeting moment of tactile artistry that aligns with a minimalist, high-end visual aesthetic." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuD3uC7mHwLq29_Z-v744CrWOTPnqhDRcAj7QutN7Y78EsYIjSZlV-jQ8NnHF40ljC3LTPOUMeJq1gMd-9dmMMB7muLgZlnZVESBasJodMVhR9pMCry0jNDu1nzNNrVzDhe0AvukSYHD7r2olISOneXIqKc0818rbcFfXqrFpPjipHb4OEF_dFbPTyMf8qpURNe8LAfY4IWYh9Xplrbdwa7DaqBwuiBEe6Ha1A5Q_fWvggEsiaUT4o-dwJfL-qIdJ1fp2Bysy4Nk4K4');"></div>
+</section>
+<!-- Comparison Table -->
+<section class="px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto pb-32">
+<h3 class="font-headline-lg text-headline-lg text-primary mb-12 text-center">Compare Packages</h3>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse min-w-[800px]">
+<thead>
+<tr class="border-b border-primary">
+<th class="py-6 pr-4 font-label-lg text-label-lg text-secondary w-1/4 uppercase tracking-widest">Feature</th>
+<th class="py-6 px-4 font-headline-sm text-headline-sm text-primary w-1/4">The Classic</th>
+<th class="py-6 px-4 font-headline-sm text-headline-sm text-primary w-1/4 bg-surface-container-low">The Editorial</th>
+<th class="py-6 pl-4 font-headline-sm text-headline-sm text-primary w-1/4">The Heirloom</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md">
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+<td class="py-6 pr-4 text-on-surface-variant">Coverage Time</td>
+<td class="py-6 px-4">3 Hours</td>
+<td class="py-6 px-4 bg-surface-container-low font-medium">4 Hours</td>
+<td class="py-6 pl-4">Unlimited</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+<td class="py-6 pr-4 text-on-surface-variant">Print Quality</td>
+<td class="py-6 px-4">2x6 Strips</td>
+<td class="py-6 px-4 bg-surface-container-low font-medium">4x6 Premium Matte</td>
+<td class="py-6 pl-4">Custom Format</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+<td class="py-6 pr-4 text-on-surface-variant">Digital Gallery</td>
+<td class="py-6 px-4">Standard Link</td>
+<td class="py-6 px-4 bg-surface-container-low font-medium">Curated &amp; Retouched</td>
+<td class="py-6 pl-4">Priority Delivery</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+<td class="py-6 pr-4 text-on-surface-variant">Backdrop Options</td>
+<td class="py-6 px-4">3 House Options</td>
+<td class="py-6 px-4 bg-surface-container-low font-medium">Textured Collections</td>
+<td class="py-6 pl-4">Fully Custom Build</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+<td class="py-6 pr-4 text-on-surface-variant">Prop Curation</td>
+<td class="py-6 px-4">Standard Fun</td>
+<td class="py-6 px-4 bg-surface-container-low font-medium">Minimalist / Editorial</td>
+<td class="py-6 pl-4">Sourced to Theme</td>
+</tr>
+<tr class="border-b border-outline-variant hover:bg-surface-container-lowest transition-colors">
+<td class="py-6 pr-4 text-on-surface-variant">On-Site Attendant</td>
+<td class="py-6 px-4">Standard Host</td>
+<td class="py-6 px-4 bg-surface-container-low font-medium">Dedicated Stylist</td>
+<td class="py-6 pl-4">Creative Director</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Common Questions (Accordion) -->
+<section class="px-margin-mobile md:px-margin-desktop max-w-3xl mx-auto pb-32">
+<h3 class="font-headline-lg text-headline-lg text-primary mb-12 text-center">Common Questions</h3>
+<div class="border-t border-primary">
+<!-- FAQ Item 1 -->
+<div class="border-b border-outline-variant">
+<button class="w-full text-left py-6 flex justify-between items-center focus:outline-none" onclick="toggleFAQ('faq1', this)">
+<span class="font-headline-sm text-headline-sm text-primary">How much space is required?</span>
+<span class="material-symbols-outlined text-primary transition-transform duration-300" id="icon-faq1">add</span>
+</button>
+<div class="hidden pb-6 font-body-md text-body-md text-on-surface-variant pr-12" id="faq1">
+                        For our standard setups, we recommend a 10x10 foot area to ensure comfortable flow for your guests, adequate space for the backdrop, and room for the equipment. We can accommodate slightly smaller spaces upon review.
+                    </div>
+</div>
+<!-- FAQ Item 2 -->
+<div class="border-b border-outline-variant">
+<button class="w-full text-left py-6 flex justify-between items-center focus:outline-none" onclick="toggleFAQ('faq2', this)">
+<span class="font-headline-sm text-headline-sm text-primary">Do you travel outside the city?</span>
+<span class="material-symbols-outlined text-primary transition-transform duration-300" id="icon-faq2">add</span>
+</button>
+<div class="hidden pb-6 font-body-md text-body-md text-on-surface-variant pr-12" id="faq2">
+                        Yes, we love traveling for events. Travel within 30 miles of our studio is included in all packages. For destinations beyond that, a custom travel fee will be applied based on mileage and potential accommodation needs.
+                    </div>
+</div>
+<!-- FAQ Item 3 -->
+<div class="border-b border-outline-variant">
+<button class="w-full text-left py-6 flex justify-between items-center focus:outline-none" onclick="toggleFAQ('faq3', this)">
+<span class="font-headline-sm text-headline-sm text-primary">Can we customize the print template?</span>
+<span class="material-symbols-outlined text-primary transition-transform duration-300" id="icon-faq3">add</span>
+</button>
+<div class="hidden pb-6 font-body-md text-body-md text-on-surface-variant pr-12" id="faq3">
+                        Absolutely. We believe your prints should reflect your event's aesthetic. All packages include custom typography and layout design for the prints. The Heirloom package offers extensive, ground-up design matching your exact invitations or brand guidelines.
+                    </div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface border-t border-outline-variant w-full">
+<div class="grid grid-cols-1 md:grid-cols-3 gap-gutter py-margin-desktop px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto">
+<!-- Brand & Copyright -->
+<div class="flex flex-col items-start justify-center">
+<span class="font-display-mobile text-display-mobile md:font-display-lg md:text-display-lg text-primary mb-2">Mémoire</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">© 2024 Mémoire. Memories, Inked in Time.</span>
+</div>
+<!-- Empty Middle Column for spacing -->
+<div class="hidden md:block"></div>
+<!-- Links -->
+<div class="flex flex-wrap md:justify-end items-center gap-6 font-body-md text-body-md">
+<a class="text-on-surface-variant hover:text-primary hover:underline decoration-outline underline-offset-4 transition-all opacity-70 hover:opacity-100" href="#">Instagram</a>
+<a class="text-on-surface-variant hover:text-primary hover:underline decoration-outline underline-offset-4 transition-all opacity-70 hover:opacity-100" href="#">Pinterest</a>
+<a class="text-on-surface-variant hover:text-primary hover:underline decoration-outline underline-offset-4 transition-all opacity-70 hover:opacity-100" href="#">Privacy</a>
+<a class="text-on-surface-variant hover:text-primary hover:underline decoration-outline underline-offset-4 transition-all opacity-70 hover:opacity-100" href="#">Terms</a>
+</div>
+</div>
+</footer>
+<!-- Interactive Scripts -->
+<script>
+        function toggleFAQ(id, btn) {
+            const content = document.getElementById(id);
+            const icon = btn.querySelector('.material-symbols-outlined');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.textContent = 'remove';
+                icon.style.transform = 'rotate(180deg)';
+            } else {
+                content.classList.add('hidden');
+                icon.textContent = 'add';
+                icon.style.transform = 'rotate(0deg)';
+            }
+        }
+    </script>
+</body></html>
