@@ -26,6 +26,7 @@ export default function AdminLayout({
   const [adminEmail, setAdminEmail] = useState("");
   const router = useRouter();
   const pathname = usePathname();
+  const [isCmsOpen, setIsCmsOpen] = useState(false);
 
   useEffect(() => {
     const supabase = getSupabaseBrowserClient();
@@ -88,6 +89,13 @@ export default function AdminLayout({
     { name: "Pengaturan", href: "/admin/settings", icon: Settings },
   ];
 
+  const cmsItems = [
+    { name: "Home Page", href: "/admin/cms/home" },
+    { name: "Portfolio", href: "/admin/cms/portfolio" },
+    { name: "Services", href: "/admin/cms/services" },
+    { name: "Contact", href: "/admin/cms/contact" },
+  ];
+
   return (
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
@@ -97,7 +105,7 @@ export default function AdminLayout({
             Admin
           </h1>
         </div>
-        <nav className="flex-1 p-4 space-y-2">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {navItems.map((item) => {
             const isActive =
               pathname === item.href ||
@@ -117,6 +125,47 @@ export default function AdminLayout({
               </Link>
             );
           })}
+          
+          {/* CMS Dropdown */}
+          <div className="pt-4 mt-4 border-t border-slate-100">
+            <button
+              onClick={() => setIsCmsOpen(!isCmsOpen)}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <FileText className="w-5 h-5" />
+                <span className="font-medium text-sm">CMS Marketing</span>
+              </div>
+              <svg
+                className={`w-4 h-4 transition-transform ${isCmsOpen ? "rotate-180" : ""}`}
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {isCmsOpen && (
+              <div className="mt-2 ml-4 pl-4 border-l border-slate-200 space-y-1">
+                {cmsItems.map((item) => {
+                  const isActive = pathname === item.href;
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`block px-4 py-2 rounded-lg text-sm transition-colors ${
+                        isActive
+                          ? "bg-pink-50 text-pink-600 font-semibold"
+                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </nav>
         <div className="p-4 border-t border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-3">

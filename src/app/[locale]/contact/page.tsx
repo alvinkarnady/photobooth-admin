@@ -1,7 +1,10 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { useTranslations } from 'next-intl';
 
 export default function Contact() {
+  const t = useTranslations('Contact');
+
   return (
     <>
       <Header />
@@ -9,30 +12,30 @@ export default function Contact() {
         {/* Let's Create Something Timeless Section */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-gutter mb-[128px]">
           <div className="flex flex-col justify-center pr-0 lg:pr-gutter">
-            <h1 className="font-display-mobile md:font-display-lg text-display-mobile md:text-display-lg mb-8 tracking-tighter">Let's Create<br/>Something Timeless</h1>
+            <h1 className="font-display-mobile md:font-display-lg text-display-mobile md:text-display-lg mb-8 tracking-tighter">{t('title')}</h1>
             <p className="font-body-lg text-body-lg text-on-surface-variant max-w-lg mb-12">
-              Every detail matters. We invite you to share your vision with us. Fill out the inquiry form below, and we will begin the conversation to ink your memories in time.
+              {t('desc')}
             </p>
             <div className="space-y-6">
               <div className="flex items-center gap-4">
                 <span className="material-symbols-outlined text-outline" style={{ fontVariationSettings: "'FILL' 0" }}>mail</span>
                 <div>
                   <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Email</p>
-                  <a className="font-body-md text-body-md hover:underline decoration-outline underline-offset-4 transition-all" href="mailto:inquiries@memoire.studio">inquiries@memoire.studio</a>
+                  <a className="font-body-md text-body-md hover:underline decoration-outline underline-offset-4 transition-all" href={`mailto:${t('contactEmail')}`}>{t('contactEmail')}</a>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <span className="material-symbols-outlined text-outline" style={{ fontVariationSettings: "'FILL' 0" }}>call</span>
                 <div>
                   <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Phone</p>
-                  <p className="font-body-md text-body-md">+1 (555) 019-8372</p>
+                  <p className="font-body-md text-body-md">{t('phone')}</p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <span className="material-symbols-outlined text-outline" style={{ fontVariationSettings: "'FILL' 0" }}>location_on</span>
                 <div>
-                  <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">Studio</p>
-                  <p className="font-body-md text-body-md">By Appointment Only<br/>124 Silk Row, Atelier District</p>
+                  <p className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">{t('studioTitle')}</p>
+                  <p className="font-body-md text-body-md">{t('studioDesc')}<br/>{t('address1')} {t('address2')}</p>
                 </div>
               </div>
             </div>
@@ -51,28 +54,28 @@ export default function Contact() {
             <form className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="relative group">
-                  <input className="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent" id="first_name" placeholder="First Name" type="text"/>
-                  <label className="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" htmlFor="first_name">First Name</label>
+                  <input className="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent" id="first_name" placeholder={t('firstName')} type="text"/>
+                  <label className="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" htmlFor="first_name">{t('firstName')}</label>
                 </div>
                 <div className="relative group">
-                  <input className="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent" id="last_name" placeholder="Last Name" type="text"/>
-                  <label className="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" htmlFor="last_name">Last Name</label>
+                  <input className="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent" id="last_name" placeholder={t('lastName')} type="text"/>
+                  <label className="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" htmlFor="last_name">{t('lastName')}</label>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="relative group">
-                  <input className="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent" id="email" placeholder="Email Address" type="email"/>
-                  <label className="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" htmlFor="email">Email Address</label>
+                  <input className="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent" id="email" placeholder={t('email')} type="email"/>
+                  <label className="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" htmlFor="email">{t('email')}</label>
                 </div>
                 <div className="relative group">
                   <input className="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent" id="phone" placeholder="Phone Number" type="tel"/>
-                  <label className="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" htmlFor="phone">Phone Number</label>
+                  <label className="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" htmlFor="phone">Phone</label>
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="relative group">
-                  <input className="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary text-primary" id="event_date" placeholder="Event Date" type="date"/>
-                  <label className="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all" htmlFor="event_date">Event Date</label>
+                  <input className="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary text-primary" id="event_date" placeholder={t('date')} type="date"/>
+                  <label className="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all" htmlFor="event_date">{t('date')}</label>
                 </div>
                 <div className="relative group">
                   <input className="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent" id="venue" placeholder="Venue Location" type="text"/>
@@ -81,19 +84,19 @@ export default function Contact() {
               </div>
               <div className="relative group mt-8">
                 <select className="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary text-primary" id="package" defaultValue="">
-                  <option disabled value="">Select a Package of Interest</option>
+                  <option disabled value="">{t('eventType')}</option>
                   <option value="editorial">Editorial Portraiture</option>
                   <option value="wedding">Curated Wedding Narrative</option>
                   <option value="commercial">Artisanal Commercial</option>
                   <option value="custom">Bespoke Commission</option>
                 </select>
-                <label className="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant" htmlFor="package">Package of Interest</label>
+                <label className="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant" htmlFor="package">{t('eventType')}</label>
               </div>
               <div className="relative group mt-8">
-                <textarea className="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent resize-none" id="details" placeholder="Tell us about your vision..." rows={4}></textarea>
-                <label className="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" htmlFor="details">Tell us about your vision...</label>
+                <textarea className="peer w-full bg-transparent border-0 input-border px-0 py-2 font-body-md text-body-md focus:ring-0 focus:border-primary placeholder-transparent resize-none" id="details" placeholder={t('details')} rows={4}></textarea>
+                <label className="absolute left-0 -top-4 font-label-sm text-label-sm text-on-surface-variant transition-all peer-placeholder-shown:text-body-md peer-placeholder-shown:top-2 peer-placeholder-shown:text-outline peer-focus:-top-4 peer-focus:text-label-sm peer-focus:text-primary" htmlFor="details">{t('details')}</label>
               </div>
-              <button className="w-full md:w-auto bg-primary text-on-primary px-8 py-4 font-label-lg text-label-lg hover:bg-on-surface-variant transition-colors mt-8" type="submit">Submit Inquiry</button>
+              <button className="w-full md:w-auto bg-primary text-on-primary px-8 py-4 font-label-lg text-label-lg hover:bg-on-surface-variant transition-colors mt-8" type="submit">{t('submitBtn')}</button>
             </form>
           </div>
 

@@ -1,8 +1,11 @@
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import FaqItem from '@/components/FaqItem';
+import { useTranslations } from 'next-intl';
 
 export default function Services() {
+  const t = useTranslations('Services');
+
   return (
     <>
       <Header />
@@ -10,10 +13,10 @@ export default function Services() {
         {/* Hero Section */}
         <section className="py-24 md:py-32 px-margin-mobile md:px-margin-desktop max-w-container-max mx-auto text-center">
           <h1 className="font-display-mobile text-display-mobile md:font-display-lg md:text-display-lg text-primary mb-6 max-w-3xl mx-auto">
-            Curated Experiences,<br/>Transparently Priced.
+            {t('title')}
           </h1>
           <p className="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">
-            Elevate your event with our bespoke photobooth services. From classic elegance to editorial perfection, choose the narrative that suits your celebration.
+            {t('desc')}
           </p>
         </section>
 
@@ -24,34 +27,34 @@ export default function Services() {
             <div className="border border-outline-variant p-8 flex flex-col justify-between bg-surface group hover:border-primary transition-colors duration-500">
               <div>
                 <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest mb-4 block">Essential Coverage</span>
-                <h2 className="font-headline-md text-headline-md text-primary mb-2">The Classic</h2>
+                <h2 className="font-headline-md text-headline-md text-primary mb-2">{t('tier1Title')}</h2>
                 <p className="font-body-md text-body-md text-on-surface-variant mb-8 h-16">
-                  Perfect for intimate gatherings requiring a touch of refined fun.
+                  {t('tier1Desc')}
                 </p>
                 <div className="mb-8">
-                  <span className="font-headline-sm text-headline-sm text-primary">$850</span>
+                  <span className="font-headline-sm text-headline-sm text-primary">{t('tier1Price')}</span>
                 </div>
                 <div className="space-y-4 mb-12">
                   <div className="flex items-start">
                     <span className="material-symbols-outlined text-secondary mr-3 text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>schedule</span>
-                    <span className="font-body-md text-body-md text-on-surface">3 Hours of Service</span>
+                    <span className="font-body-md text-body-md text-on-surface">{t('tier1Feature1')}</span>
                   </div>
                   <div className="flex items-start">
                     <span className="material-symbols-outlined text-secondary mr-3 text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>photo_prints</span>
-                    <span className="font-body-md text-body-md text-on-surface">Unlimited 2x6 Prints</span>
+                    <span className="font-body-md text-body-md text-on-surface">{t('tier1Feature2')}</span>
                   </div>
                   <div className="flex items-start">
                     <span className="material-symbols-outlined text-secondary mr-3 text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>gallery_thumbnail</span>
-                    <span className="font-body-md text-body-md text-on-surface">Standard Digital Gallery</span>
+                    <span className="font-body-md text-body-md text-on-surface">{t('tier1Feature3')}</span>
                   </div>
                   <div className="flex items-start">
                     <span className="material-symbols-outlined text-secondary mr-3 text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>wallpaper</span>
-                    <span className="font-body-md text-body-md text-on-surface">Choice of 3 House Backdrops</span>
+                    <span className="font-body-md text-body-md text-on-surface">{t('tier1Feature4')}</span>
                   </div>
                 </div>
               </div>
               <button className="w-full border border-primary text-primary font-label-lg text-label-lg py-4 hover:bg-primary hover:text-on-primary transition-colors duration-300">
-                Select Classic
+                {t('inquireBtn')}
               </button>
             </div>
 
@@ -62,38 +65,38 @@ export default function Services() {
               </div>
               <div>
                 <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest mb-4 block">Complete Experience</span>
-                <h2 className="font-headline-md text-headline-md text-primary mb-2">The Editorial</h2>
+                <h2 className="font-headline-md text-headline-md text-primary mb-2">{t('tier2Title')}</h2>
                 <p className="font-body-md text-body-md text-on-surface-variant mb-8 h-16">
-                  A magazine-worthy setup with premium aesthetics and dedicated styling.
+                  {t('tier2Desc')}
                 </p>
                 <div className="mb-8">
-                  <span className="font-headline-sm text-headline-sm text-primary">$1,200</span>
+                  <span className="font-headline-sm text-headline-sm text-primary">{t('tier2Price')}</span>
                 </div>
                 <div className="space-y-4 mb-12">
                   <div className="flex items-start">
                     <span className="material-symbols-outlined text-primary mr-3 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>schedule</span>
-                    <span className="font-body-md text-body-md text-on-surface">4 Hours of Service</span>
+                    <span className="font-body-md text-body-md text-on-surface">{t('tier2Feature1')}</span>
                   </div>
                   <div className="flex items-start">
                     <span className="material-symbols-outlined text-primary mr-3 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>photo_prints</span>
-                    <span className="font-body-md text-body-md text-on-surface">Unlimited 4x6 Prints</span>
+                    <span className="font-body-md text-body-md text-on-surface">{t('tier2Feature2')}</span>
                   </div>
                   <div className="flex items-start">
                     <span className="material-symbols-outlined text-primary mr-3 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>photo_library</span>
-                    <span className="font-body-md text-body-md text-on-surface">Curated Online Gallery</span>
+                    <span className="font-body-md text-body-md text-on-surface">{t('tier2Feature3')}</span>
                   </div>
                   <div className="flex items-start">
                     <span className="material-symbols-outlined text-primary mr-3 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>palette</span>
-                    <span className="font-body-md text-body-md text-on-surface">Premium Textured Backdrop</span>
+                    <span className="font-body-md text-body-md text-on-surface">{t('tier2Feature4')}</span>
                   </div>
                   <div className="flex items-start">
                     <span className="material-symbols-outlined text-primary mr-3 text-[20px]" style={{ fontVariationSettings: "'FILL' 1" }}>masks</span>
-                    <span className="font-body-md text-body-md text-on-surface">Minimalist Prop Selection</span>
+                    <span className="font-body-md text-body-md text-on-surface">{t('tier2Feature5')}</span>
                   </div>
                 </div>
               </div>
               <button className="w-full bg-primary text-on-primary font-label-lg text-label-lg py-4 hover:bg-on-surface-variant transition-colors duration-300">
-                Select Editorial
+                {t('inquireBtn')}
               </button>
             </div>
 
@@ -101,34 +104,34 @@ export default function Services() {
             <div className="border border-outline-variant p-8 flex flex-col justify-between bg-surface group hover:border-primary transition-colors duration-500">
               <div>
                 <span className="font-label-sm text-label-sm text-secondary uppercase tracking-widest mb-4 block">Bespoke Design</span>
-                <h2 className="font-headline-md text-headline-md text-primary mb-2">The Heirloom</h2>
+                <h2 className="font-headline-md text-headline-md text-primary mb-2">{t('tier3Title')}</h2>
                 <p className="font-body-md text-body-md text-on-surface-variant mb-8 h-16">
-                  Fully custom art direction tailored seamlessly to your event's branding.
+                  {t('tier3Desc')}
                 </p>
                 <div className="mb-8">
-                  <span className="font-headline-sm text-headline-sm text-primary">Custom Quote</span>
+                  <span className="font-headline-sm text-headline-sm text-primary">{t('tier3Price')}</span>
                 </div>
                 <div className="space-y-4 mb-12">
                   <div className="flex items-start">
                     <span className="material-symbols-outlined text-secondary mr-3 text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>all_inclusive</span>
-                    <span className="font-body-md text-body-md text-on-surface">Unlimited Hours</span>
+                    <span className="font-body-md text-body-md text-on-surface">{t('tier3Feature1')}</span>
                   </div>
                   <div className="flex items-start">
                     <span className="material-symbols-outlined text-secondary mr-3 text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>auto_awesome</span>
-                    <span className="font-body-md text-body-md text-on-surface">Custom Designed Backdrop</span>
+                    <span className="font-body-md text-body-md text-on-surface">{t('tier3Feature2')}</span>
                   </div>
                   <div className="flex items-start">
                     <span className="material-symbols-outlined text-secondary mr-3 text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>book</span>
-                    <span className="font-body-md text-body-md text-on-surface">Linen Guestbook Included</span>
+                    <span className="font-body-md text-body-md text-on-surface">{t('tier3Feature3')}</span>
                   </div>
                   <div className="flex items-start">
                     <span className="material-symbols-outlined text-secondary mr-3 text-[20px]" style={{ fontVariationSettings: "'FILL' 0" }}>support_agent</span>
-                    <span className="font-body-md text-body-md text-on-surface">Dedicated Creative Director</span>
+                    <span className="font-body-md text-body-md text-on-surface">{t('tier3Feature4')}</span>
                   </div>
                 </div>
               </div>
               <button className="w-full border border-primary text-primary font-label-lg text-label-lg py-4 hover:bg-primary hover:text-on-primary transition-colors duration-300">
-                Inquire Now
+                {t('inquireBtn')}
               </button>
             </div>
           </div>
@@ -147,9 +150,9 @@ export default function Services() {
               <thead>
                 <tr className="border-b border-primary">
                   <th className="py-6 pr-4 font-label-lg text-label-lg text-secondary w-1/4 uppercase tracking-widest">Feature</th>
-                  <th className="py-6 px-4 font-headline-sm text-headline-sm text-primary w-1/4">The Classic</th>
-                  <th className="py-6 px-4 font-headline-sm text-headline-sm text-primary w-1/4 bg-surface-container-low">The Editorial</th>
-                  <th className="py-6 pl-4 font-headline-sm text-headline-sm text-primary w-1/4">The Heirloom</th>
+                  <th className="py-6 px-4 font-headline-sm text-headline-sm text-primary w-1/4">{t('tier1Title')}</th>
+                  <th className="py-6 px-4 font-headline-sm text-headline-sm text-primary w-1/4 bg-surface-container-low">{t('tier2Title')}</th>
+                  <th className="py-6 pl-4 font-headline-sm text-headline-sm text-primary w-1/4">{t('tier3Title')}</th>
                 </tr>
               </thead>
               <tbody className="font-body-md text-body-md">
@@ -196,19 +199,19 @@ export default function Services() {
 
         {/* Common Questions (Accordion) */}
         <section className="px-margin-mobile md:px-margin-desktop max-w-3xl mx-auto pb-32">
-          <h3 className="font-headline-lg text-headline-lg text-primary mb-12 text-center">Common Questions</h3>
+          <h3 className="font-headline-lg text-headline-lg text-primary mb-12 text-center">{t('faqTitle')}</h3>
           <div className="border-t border-primary">
             <FaqItem 
-              question="How much space is required?" 
-              answer="For our standard setups, we recommend a 10x10 foot area to ensure comfortable flow for your guests, adequate space for the backdrop, and room for the equipment. We can accommodate slightly smaller spaces upon review."
+              question={t('faq1Q')} 
+              answer={t('faq1A')}
             />
             <FaqItem 
-              question="Do you travel outside the city?" 
-              answer="Yes, we love traveling for events. Travel within 30 miles of our studio is included in all packages. For destinations beyond that, a custom travel fee will be applied based on mileage and potential accommodation needs."
+              question={t('faq2Q')} 
+              answer={t('faq2A')}
             />
             <FaqItem 
-              question="Can we customize the print template?" 
-              answer="Absolutely. We believe your prints should reflect your event's aesthetic. All packages include custom typography and layout design for the prints. The Heirloom package offers extensive, ground-up design matching your exact invitations or brand guidelines."
+              question={t('faq3Q')} 
+              answer={t('faq3A')}
             />
           </div>
         </section>

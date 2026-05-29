@@ -1,17 +1,25 @@
 "use client";
 
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
+import { Link, usePathname, useRouter } from '@/i18n/routing';
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const locale = useLocale();
+  const t = useTranslations('Header');
 
   const navLinks = [
-    { name: 'Home', href: '/' },
-    { name: 'Services', href: '/services' },
-    { name: 'Portfolio', href: '/portfolio' },
-    { name: 'Contact', href: '/contact' },
+    { name: t('home'), href: '/' },
+    { name: t('services'), href: '/services' },
+    { name: t('portfolio'), href: '/portfolio' },
+    { name: t('contact'), href: '/contact' },
   ];
+
+  const handleLanguageChange = (newLocale: string) => {
+    // pathname here is the path without the locale prefix because of next-intl
+    router.replace(pathname, { locale: newLocale });
+  };
 
   return (
     <header className="docked full-width top-0 sticky z-50 bg-surface border-b border-outline-variant flat no shadows">
@@ -28,7 +36,7 @@ export default function Header() {
             return (
               <Link
                 key={link.name}
-                href={link.href}
+                href={link.href as any}
                 className={
                   isActive
                     ? 'text-primary border-b border-primary pb-1'
@@ -40,9 +48,24 @@ export default function Header() {
             );
           })}
         </nav>
-        <div className="hidden md:block">
+        <div className="hidden md:flex items-center">
+          <div className="flex items-center gap-2 mr-8 text-secondary font-label-sm text-label-sm tracking-widest">
+            <button 
+              onClick={() => handleLanguageChange('en')}
+              className={locale === 'en' ? 'text-primary border-b border-primary pb-0.5' : 'hover:text-primary transition-colors pb-0.5'}
+            >
+              EN
+            </button>
+            <span className="opacity-50">/</span>
+            <button 
+              onClick={() => handleLanguageChange('id')}
+              className={locale === 'id' ? 'text-primary border-b border-primary pb-0.5' : 'hover:text-primary transition-colors pb-0.5'}
+            >
+              ID
+            </button>
+          </div>
           <button className="bg-primary text-on-primary px-6 py-3 font-label-lg text-label-lg rounded-DEFAULT hover:opacity-90 transition-opacity flex items-center gap-2">
-            Book Now
+            {t('bookNow')}
           </button>
         </div>
         <button className="md:hidden text-primary">

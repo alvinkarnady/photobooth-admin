@@ -226,6 +226,7 @@ function DownloadContent() {
                 src={imageUrl}
                 alt="Photobooth Result"
                 fill
+                sizes="100vw"
                 className="object-contain"
                 priority
               />
