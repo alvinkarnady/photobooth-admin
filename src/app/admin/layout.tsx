@@ -66,8 +66,8 @@ export default function AdminLayout({
 
   if (isAuthenticated === null) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <Loader2 className="w-8 h-8 animate-spin text-pink-500" />
+      <div className="min-h-screen flex items-center justify-center bg-surface">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
@@ -97,13 +97,15 @@ export default function AdminLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-surface flex font-sans text-primary">
       {/* Sidebar */}
-      <aside className="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex">
-        <div className="p-6 border-b border-slate-100">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-pink-500 to-violet-500 bg-clip-text text-transparent">
-            Admin
-          </h1>
+      <aside className="w-64 bg-surface-container border-r border-outline-variant flex flex-col hidden md:flex">
+        <div className="p-6 border-b border-outline-variant flex justify-center">
+          <img 
+            src="/images/memoire-logo.png" 
+            alt="Mémoire Logo" 
+            className="h-8 w-auto object-contain mix-blend-multiply opacity-90" 
+          />
         </div>
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {navItems.map((item) => {
@@ -114,10 +116,10 @@ export default function AdminLayout({
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                className={`flex items-center gap-3 px-4 py-3 rounded-none transition-colors font-label-md uppercase tracking-widest ${
                   isActive
-                    ? "bg-pink-50 text-pink-600 font-semibold"
-                    : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    ? "bg-primary text-on-primary"
+                    : "text-secondary hover:bg-surface hover:text-primary"
                 }`}
               >
                 <item.icon className="w-5 h-5" />
@@ -127,10 +129,10 @@ export default function AdminLayout({
           })}
           
           {/* CMS Dropdown */}
-          <div className="pt-4 mt-4 border-t border-slate-100">
+          <div className="pt-4 mt-4 border-t border-outline-variant">
             <button
               onClick={() => setIsCmsOpen(!isCmsOpen)}
-              className="w-full flex items-center justify-between px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
+              className="w-full flex items-center justify-between px-4 py-3 rounded-none text-secondary hover:bg-surface hover:text-primary transition-colors font-label-md uppercase tracking-widest"
             >
               <div className="flex items-center gap-3">
                 <FileText className="w-5 h-5" />
@@ -146,17 +148,17 @@ export default function AdminLayout({
               </svg>
             </button>
             {isCmsOpen && (
-              <div className="mt-2 ml-4 pl-4 border-l border-slate-200 space-y-1">
+              <div className="mt-2 ml-4 pl-4 border-l border-outline-variant space-y-1">
                 {cmsItems.map((item) => {
                   const isActive = pathname === item.href;
                   return (
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`block px-4 py-2 rounded-lg text-sm transition-colors ${
+                      className={`block px-4 py-2 rounded-none font-label-sm uppercase tracking-widest transition-colors ${
                         isActive
-                          ? "bg-pink-50 text-pink-600 font-semibold"
-                          : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                          ? "text-primary font-bold bg-surface"
+                          : "text-secondary hover:bg-surface hover:text-primary"
                       }`}
                     >
                       {item.name}
@@ -167,14 +169,14 @@ export default function AdminLayout({
             )}
           </div>
         </nav>
-        <div className="p-4 border-t border-slate-100 flex items-center justify-between">
+        <div className="p-4 border-t border-outline-variant flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center text-pink-600 font-bold uppercase">
+            <div className="w-10 h-10 rounded-full bg-surface flex items-center justify-center text-primary font-bold uppercase border border-outline-variant">
               {adminEmail.charAt(0)}
             </div>
             <div className="hidden lg:block">
-              <p className="text-sm font-bold text-slate-800">Admin</p>
-              <p className="text-xs text-slate-500 truncate max-w-[120px]">
+              <p className="font-label-sm uppercase tracking-widest text-primary">Admin</p>
+              <p className="text-xs text-secondary truncate max-w-[120px]">
                 {adminEmail}
               </p>
             </div>
@@ -182,7 +184,7 @@ export default function AdminLayout({
           <button
             onClick={handleLogout}
             title="Logout"
-            className="p-2.5 rounded-xl text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+            className="p-2.5 rounded-none text-secondary hover:bg-surface hover:text-primary transition-colors border border-transparent hover:border-outline-variant"
           >
             <LogOut className="w-5 h-5" />
           </button>
@@ -192,14 +194,18 @@ export default function AdminLayout({
       {/* Main Content */}
       <main className="flex-1 flex flex-col h-screen overflow-hidden">
         {/* Mobile Header */}
-        <header className="md:hidden bg-white border-b border-slate-200 p-4 flex justify-between items-center">
-          <h1 className="text-lg font-bold text-slate-800">Admin</h1>
-          <button onClick={handleLogout} className="text-slate-500">
+        <header className="md:hidden bg-surface-container border-b border-outline-variant p-4 flex justify-between items-center">
+          <img 
+            src="/images/memoire-logo.png" 
+            alt="Mémoire Logo" 
+            className="h-6 w-auto object-contain mix-blend-multiply opacity-90" 
+          />
+          <button onClick={handleLogout} className="text-secondary hover:text-primary transition-colors">
             <LogOut className="w-5 h-5" />
           </button>
         </header>
 
-        <div className="flex-1 overflow-auto p-6 md:p-10">{children}</div>
+        <div className="flex-1 overflow-auto p-6 md:p-10 bg-surface">{children}</div>
       </main>
     </div>
   );

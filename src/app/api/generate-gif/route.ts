@@ -63,10 +63,10 @@ export async function GET(req: NextRequest) {
       const palette = quantize(frame.data, 256);
       const index = applyPalette(frame.data, palette);
       // repeat: 0 means infinite loop
-      gif.writeFrame(index, frameWidth, frameHeight, { 
-        palette, 
-        delay, 
-        repeat: 0 
+      gif.writeFrame(index, frameWidth, frameHeight, {
+        palette,
+        delay,
+        repeat: 0
       });
     }
 
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse(new Uint8Array(gifBuffer), {
       headers: {
         'Content-Type': 'image/gif',
-        'Content-Disposition': `attachment; filename="piawai_${type}_${session}.gif"`,
+        'Content-Disposition': `attachment; filename="Mémoire_${type}_${session}.gif"`,
         'Cache-Control': 'public, max-age=86400, s-maxage=86400', // Cache 24h
       },
     });

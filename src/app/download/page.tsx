@@ -20,7 +20,7 @@ function DownloadContent() {
 
   const [isDownloading, setIsDownloading] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  const [activeTab, setActiveTab] = useState<'photo' | 'gif' | 'live'>('photo');
+  const [activeTab, setActiveTab] = useState<'photo' | 'gif' | 'live' | 'raw'>('photo');
   const [gifBlobUrl, setGifBlobUrl] = useState<string | null>(null);
   const [liveBlobUrl, setLiveBlobUrl] = useState<string | null>(null);
   const [isGeneratingGif, setIsGeneratingGif] = useState(false);
@@ -91,10 +91,31 @@ function DownloadContent() {
   const currentLiveUrl = session ? liveBlobUrl : legacyLive;
   const hasGif = session ? burstsCount > 0 : !!legacyGif;
   const hasLive = session ? livesCount > 0 : !!legacyLive;
+  const hasRaw = session ? burstsCount > 0 : false;
 
   const handleDownload = async () => {
     try {
       setIsDownloading(true);
+
+      if (activeTab === 'raw') {
+        // Download multiple raw photos
+        for (let i = 0; i < burstsCount; i++) {
+          const rawUrl = `${supabaseUrl}/storage/v1/object/public/photos/${session}/burst_${i}.png`;
+          const response = await fetch(rawUrl);
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Mémoire_Raw_${i + 1}_${new Date().getTime()}.png`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          await new Promise(r => setTimeout(r, 400)); // delay to prevent browser block
+        }
+        return;
+      }
+
       let targetUrl: string | null = null;
       let ext = 'png';
 
@@ -119,7 +140,7 @@ function DownloadContent() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `CubaPoto_${new Date().getTime()}.${ext}`;
+      a.download = `Mémoire_${new Date().getTime()}.${ext}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -136,8 +157,8 @@ function DownloadContent() {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: 'CobaPoto',
-          text: 'Lihat foto saya dari CobaPoto!',
+          title: 'Mémoire',
+          text: 'Lihat foto saya dari Mémoire!',
           url: imageUrl,
         });
       } else {
@@ -154,43 +175,39 @@ function DownloadContent() {
     (activeTab === 'live' && isGeneratingLive);
 
   return (
-    <div className="min-h-screen bg-[#f8f6f3] flex flex-col items-center text-slate-800 px-5 py-10 relative overflow-hidden font-sans">
-      {/* Subtle ambient background */}
-      <div
-        className="absolute inset-0 z-0 opacity-[0.90] blur-[30px] scale-125 pointer-events-none"
-        style={{ backgroundImage: `url(${imageUrl})`, backgroundPosition: 'center', backgroundSize: 'cover' }}
-      />
-
-      <div className="z-10 w-full max-w-sm flex flex-col items-center animate-fade-in-up">
+    <div className="min-h-screen bg-surface flex flex-col items-center text-primary px-5 py-12 relative overflow-hidden font-sans">
+      <div className="z-10 w-full max-w-lg flex flex-col items-center animate-fade-in-up">
         {/* Minimal header */}
-        <div className="mb-8 text-center mt-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60 mb-2" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}>CubaPoto</p>
-          <h1 className="text-2xl font-bold text-slate-100 tracking-tight" style={{ textShadow: '2px 2px 4px rgba(0, 0, 0, 0.2)' }}>
-            Foto kamu sudah siap ✨
+        <div className="mb-12 text-center flex flex-col items-center gap-6">
+          <img
+            src="/images/memoire-logo.png"
+            alt="Mémoire Logo"
+            className="h-10 md:h-12 w-auto object-contain mix-blend-multiply opacity-90"
+          />
+          <h1 className="font-display-mobile md:font-display-md text-display-mobile md:text-display-md text-primary tracking-tight leading-tight italic">
+            Your memories, preserved.
           </h1>
         </div>
 
-        {/* Tab switcher — pill style */}
+        {/* Tab switcher — minimalist border style */}
         {(hasGif || hasLive) && (
-          <div className="flex gap-2 mb-6">
+          <div className="flex w-full border-b border-outline-variant mb-10">
             <button
               onClick={() => setActiveTab('photo')}
-              className={`px-5 py-2.5 text-xs font-semibold rounded-full transition-all duration-300 backdrop-blur-xl border ${activeTab === 'photo'
-                ? 'bg-white/30 text-white border-white/40 shadow-lg shadow-black/10'
-                : 'bg-white/10 text-white/70 border-white/15 hover:bg-white/20 hover:text-white'
+              className={`flex-1 pb-4 text-xs font-semibold uppercase tracking-widest transition-colors ${activeTab === 'photo'
+                ? 'border-b-2 border-primary text-primary'
+                : 'text-secondary hover:text-primary'
                 }`}
-              style={{ textShadow: '0 1px 2px rgba(0,0,0,0.15)' }}
             >
-              Foto
+              Photo
             </button>
             {hasGif && (
               <button
                 onClick={() => setActiveTab('gif')}
-                className={`px-5 py-2.5 text-xs font-semibold rounded-full transition-all duration-300 backdrop-blur-xl border ${activeTab === 'gif'
-                  ? 'bg-white/30 text-white border-white/40 shadow-lg shadow-black/10'
-                  : 'bg-white/10 text-white/70 border-white/15 hover:bg-white/20 hover:text-white'
+                className={`flex-1 pb-4 text-xs font-semibold uppercase tracking-widest transition-colors ${activeTab === 'gif'
+                  ? 'border-b-2 border-primary text-primary'
+                  : 'text-secondary hover:text-primary'
                   }`}
-                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.15)' }}
               >
                 GIF
               </button>
@@ -198,84 +215,105 @@ function DownloadContent() {
             {hasLive && (
               <button
                 onClick={() => setActiveTab('live')}
-                className={`px-5 py-2.5 text-xs font-semibold rounded-full transition-all duration-300 backdrop-blur-xl border ${activeTab === 'live'
-                  ? 'bg-white/30 text-white border-white/40 shadow-lg shadow-black/10'
-                  : 'bg-white/10 text-white/70 border-white/15 hover:bg-white/20 hover:text-white'
+                className={`flex-1 pb-4 text-xs font-semibold uppercase tracking-widest transition-colors ${activeTab === 'live'
+                  ? 'border-b-2 border-primary text-primary'
+                  : 'text-secondary hover:text-primary'
                   }`}
-                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.15)' }}
               >
                 Live Photo
+              </button>
+            )}
+            {hasRaw && (
+              <button
+                onClick={() => setActiveTab('raw')}
+                className={`flex-1 pb-4 text-xs font-semibold uppercase tracking-widest transition-colors ${activeTab === 'raw'
+                  ? 'border-b-2 border-primary text-primary'
+                  : 'text-secondary hover:text-primary'
+                  }`}
+              >
+                Raw
               </button>
             )}
           </div>
         )}
 
-        {/* Floating photo frame — no container, no border */}
-        <div className="relative w-full mb-8 group">
-          <div className="relative aspect-[3/4] w-full overflow-hidden transition-all duration-500 group-hover:shadow-[0_30px_70px_-15px_rgba(0,0,0,0.2)] group-hover:-translate-y-1">
-            {isCurrentTabLoading ? (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
-                <div className="w-12 h-12 border-[3px] border-slate-200 border-t-slate-600 rounded-full animate-spin mb-4" />
-                <p className="text-slate-600 font-semibold text-sm">
-                  Membuat {activeTab === 'live' ? 'Live Photo' : 'GIF'}...
-                </p>
-                <p className="text-slate-400 text-xs mt-1.5">Tunggu sebentar ya</p>
-              </div>
-            ) : activeTab === 'photo' ? (
-              <Image
-                src={imageUrl}
-                alt="Photobooth Result"
-                fill
-                sizes="100vw"
-                className="object-contain"
-                priority
-              />
-            ) : activeTab === 'gif' && currentGifUrl ? (
-              <img
-                src={currentGifUrl}
-                alt="Photobooth GIF Raw"
-                className="w-full h-full object-contain"
-              />
-            ) : activeTab === 'live' && currentLiveUrl ? (
-              <img
-                src={currentLiveUrl}
-                alt="Photobooth Live Photo"
-                className="w-full h-full object-contain"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-slate-50">
-                <p className="text-slate-400 text-sm">Tidak tersedia</p>
-              </div>
-            )}
+        {/* Minimalist photo frame */}
+        <div className="relative w-full mb-12">
+          <div className="relative aspect-[3/4] w-full bg-surface-container border border-outline-variant shadow-sm overflow-hidden p-2 md:p-4">
+            <div className="relative w-full h-full bg-white border border-outline-variant/50">
+              {isCurrentTabLoading ? (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-surface-container-lowest">
+                  <div className="w-8 h-8 border-[2px] border-outline-variant border-t-primary rounded-full animate-spin mb-4" />
+                  <p className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">
+                    Crafting {activeTab === 'live' ? 'Live Photo' : 'GIF'}...
+                  </p>
+                </div>
+              ) : activeTab === 'photo' ? (
+                <Image
+                  src={imageUrl}
+                  alt="Mémoire Result"
+                  fill
+                  sizes="100vw"
+                  className="object-contain p-2"
+                  priority
+                />
+              ) : activeTab === 'gif' && currentGifUrl ? (
+                <img
+                  src={currentGifUrl}
+                  alt="Mémoire GIF Raw"
+                  className="w-full h-full object-contain p-2"
+                />
+              ) : activeTab === 'live' && currentLiveUrl ? (
+                <img
+                  src={currentLiveUrl}
+                  alt="Mémoire Live Photo"
+                  className="w-full h-full object-contain p-2"
+                />
+              ) : activeTab === 'raw' && hasRaw ? (
+                <div className="absolute inset-0 overflow-y-auto p-2 grid grid-cols-2 gap-2 bg-surface custom-scrollbar">
+                  {Array.from({ length: burstsCount }).map((_, i) => (
+                    <img
+                      key={i}
+                      src={`${supabaseUrl}/storage/v1/object/public/photos/${session}/burst_${i}.png`}
+                      alt={`Raw ${i + 1}`}
+                      className="w-full aspect-[3/4] object-cover border border-outline-variant/30 shadow-sm"
+                      loading="lazy"
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-surface-container-lowest">
+                  <p className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Not Available</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Action Buttons — glass style */}
-        <div className="w-full flex flex-col gap-3 mb-8">
+        {/* Action Buttons — editorial style */}
+        <div className="w-full flex flex-col sm:flex-row gap-4 mb-8">
           <button
             onClick={handleDownload}
             disabled={isDownloading || isCurrentTabLoading}
-            className="w-full py-3.5 px-6 bg-white/20 backdrop-blur-xl text-white font-semibold text-sm rounded-2xl flex items-center justify-center gap-2.5 border border-white/30 hover:bg-white/30 transition-all duration-300 shadow-lg shadow-black/10 active:scale-[0.97] disabled:opacity-60 disabled:active:scale-100"
-            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.2)' }}
+            className="flex-1 py-4 px-6 bg-primary text-on-primary font-label-lg text-label-lg uppercase tracking-widest rounded-none hover:opacity-90 transition-opacity flex items-center justify-center gap-3 disabled:opacity-50"
           >
             {isDownloading ? (
-              <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <svg className="animate-spin h-5 w-5 text-on-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"></circle>
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+              <span className="material-symbols-outlined font-light">download</span>
             )}
-            {isDownloading ? 'Menyimpan...' : `Simpan ${activeTab === 'live' ? 'Live Photo' : activeTab === 'gif' ? 'Mentahan GIF' : 'Foto'}`}
+            {isDownloading ? 'Saving...' : `Save ${activeTab === 'live' ? 'Live Photo' : activeTab === 'gif' ? 'GIF' : activeTab === 'raw' ? 'Raw Photos' : 'Photo'}`}
           </button>
 
           <button
             onClick={handleShare}
-            className="w-full py-3.5 px-6 bg-white/10 backdrop-blur-xl text-white/80 font-semibold text-sm rounded-2xl flex items-center justify-center gap-2.5 border border-white/20 hover:bg-white/20 hover:text-white transition-all duration-300 shadow-sm shadow-black/5 active:scale-[0.97]"
-            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.15)' }}
+            className="flex-1 py-4 px-6 border border-primary text-primary bg-transparent font-label-lg text-label-lg uppercase tracking-widest rounded-none hover:bg-surface-variant transition-colors flex items-center justify-center gap-3"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
-            Bagikan
+            <span className="material-symbols-outlined font-light">share</span>
+            Share
           </button>
         </div>
       </div>
@@ -286,8 +324,13 @@ function DownloadContent() {
 export default function DownloadPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
-        <p className="text-pink-500 font-bold animate-pulse text-xl">Menyiapkan fotomu...</p>
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center p-6 gap-6">
+        <img
+          src="/images/memoire-logo.png"
+          alt="Mémoire Logo"
+          className="h-8 w-auto object-contain mix-blend-multiply opacity-50 animate-pulse"
+        />
+        <p className="font-label-sm text-label-sm text-secondary uppercase tracking-widest animate-pulse">Loading experience...</p>
       </div>
     }>
       <DownloadContent />
