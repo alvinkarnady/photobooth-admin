@@ -23,7 +23,7 @@ export default function Home() {
               <img 
                 alt="Mémoire Logo Ink Splash" 
                 className="w-full h-full object-contain mix-blend-multiply opacity-90" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuACQM_GmFHoAYpSpP4km_QixM04QFS0pVV2f4Jlki7qAzwu7Oac5vI283M4Sd-CZCsWGNjjIX228o3hADfwGGBghwI3XXmbgOfr0r4ukoUeawg-OYu3bqBIfFgwGEegcJZqCd_sPlbFLBt2r6GF6ttRrn2uYi-Yi0V4ZYiNqXeOVUYc_dq5V_orsBZ6v3myKh8rsDelNgJfDlNBZ6C4UT9lj8u8DtRd5J_ZP_x2NLD8Xyss4wXhQz0xk2Gwu_3wlELV8oBpzcnMV0g"
+                src="/images/logo-splash.png"
               />
             </div>
             <h1 className="font-display-mobile md:font-display-lg text-display-mobile md:text-display-lg text-primary tracking-tight leading-tight">
