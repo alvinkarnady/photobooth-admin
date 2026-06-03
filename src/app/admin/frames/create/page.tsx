@@ -13,6 +13,8 @@ type Slot = {
   top: number; // ratio 0-1
   width: number; // ratio 0-1
   height: number; // ratio 0-1
+  cameraShotIndex?: number;
+  isMirrored?: boolean;
 };
 
 export default function CreateFramePage() {
@@ -69,7 +71,7 @@ export default function CreateFramePage() {
   const addSlot = () => {
     setSlots([
       ...slots,
-      { id: uuidv4(), left: 0.1, top: 0.1, width: 0.3, height: 0.4 },
+      { id: uuidv4(), left: 0.1, top: 0.1, width: 0.3, height: 0.4, cameraShotIndex: slots.length, isMirrored: false },
     ]);
   };
 
@@ -152,14 +154,16 @@ export default function CreateFramePage() {
         background_color: 4294765804, 
         canvas_width: imageSize.width,
         canvas_height: imageSize.height,
-        photo_slots: slots.map(s => ({
+        photo_slots: slots.map((s, idx) => ({
           left: s.left,
           top: s.top,
           width: s.width,
           height: s.height,
           rotation: 0,
           borderRadius: 8,
-          liveDuration: liveDuration
+          liveDuration: liveDuration,
+          cameraShotIndex: s.cameraShotIndex ?? idx,
+          isMirrored: s.isMirrored ?? false,
         }))
       });
 
@@ -264,11 +268,42 @@ export default function CreateFramePage() {
               ) : (
                 <div className="space-y-2">
                   {slots.map((slot, idx) => (
-                    <div key={slot.id} className="flex justify-between items-center bg-slate-50 border border-slate-200 p-3 rounded-xl">
-                      <span className="font-medium text-slate-600 text-sm">Slot {idx + 1}</span>
-                      <button onClick={() => removeSlot(slot.id)} className="text-red-400 hover:text-red-600 p-1">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                    <div key={slot.id} className="bg-slate-50 border border-slate-200 p-3 rounded-xl flex flex-col gap-3">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-slate-600 text-sm">Slot {idx + 1}</span>
+                        <button onClick={() => removeSlot(slot.id)} className="text-red-400 hover:text-red-600 p-1">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div>
+                          <label className="text-xs text-slate-500 mb-1 block">Sumber Foto</label>
+                          <select 
+                            value={slot.cameraShotIndex ?? idx}
+                            onChange={(e) => {
+                              const val = parseInt(e.target.value);
+                              setSlots(slots.map(s => s.id === slot.id ? { ...s, cameraShotIndex: val } : s));
+                            }}
+                            className="w-full text-xs px-2 py-1.5 border border-slate-200 rounded outline-none"
+                          >
+                            {slots.map((_, i) => (
+                              <option key={i} value={i}>Jepretan Kamera #{i + 1}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            checked={slot.isMirrored ?? false}
+                            onChange={(e) => {
+                              setSlots(slots.map(s => s.id === slot.id ? { ...s, isMirrored: e.target.checked } : s));
+                            }}
+                            className="rounded border-slate-300 text-pink-500 focus:ring-pink-500"
+                          />
+                          <span className="text-xs text-slate-600">Mirror (Flip Horizontal)</span>
+                        </label>
+                      </div>
                     </div>
                   ))}
                 </div>

@@ -18,13 +18,9 @@ function DownloadContent() {
   const legacyGif = searchParams.get('gif');
   const legacyLive = searchParams.get('live');
 
-  const [isDownloading, setIsDownloading] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [activeTab, setActiveTab] = useState<'photo' | 'gif' | 'live' | 'raw'>('photo');
-  const [gifBlobUrl, setGifBlobUrl] = useState<string | null>(null);
-  const [liveBlobUrl, setLiveBlobUrl] = useState<string | null>(null);
-  const [isGeneratingGif, setIsGeneratingGif] = useState(false);
-  const [isGeneratingLive, setIsGeneratingLive] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
@@ -36,45 +32,8 @@ function DownloadContent() {
     ? `${supabaseUrl}/storage/v1/object/public/photos/${session}/photo.png`
     : legacyUrl;
 
-  // Generate GIF on-demand when user switches to GIF/Live tab
-  const generateGif = useCallback(async (type: 'burst' | 'live') => {
-    if (!session) return;
-
-    const count = type === 'burst' ? burstsCount : livesCount;
-    if (count === 0) return;
-
-    const setter = type === 'burst' ? setIsGeneratingGif : setIsGeneratingLive;
-    const blobSetter = type === 'burst' ? setGifBlobUrl : setLiveBlobUrl;
-    const delay = type === 'burst' ? 400 : liveDelay;
-
-    setter(true);
-    try {
-      const apiUrl = `/api/generate-gif?session=${session}&type=${type}&count=${count}&width=720&delay=${delay}`;
-      const response = await fetch(apiUrl);
-      if (!response.ok) throw new Error('GIF generation failed');
-
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      blobSetter(url);
-    } catch (error) {
-      console.error('Error generating GIF:', error);
-      alert('Gagal membuat GIF. Silakan coba lagi.');
-    } finally {
-      setter(false);
-    }
-  }, [session, burstsCount, livesCount]);
-
-  // Trigger GIF generation when tab changes
-  useEffect(() => {
-    if (!session) return; // Legacy mode, don't auto-generate
-
-    if (activeTab === 'gif' && !gifBlobUrl && !isGeneratingGif && burstsCount > 0) {
-      generateGif('burst');
-    }
-    if (activeTab === 'live' && !liveBlobUrl && !isGeneratingLive && livesCount > 0) {
-      generateGif('live');
-    }
-  }, [activeTab, session, gifBlobUrl, liveBlobUrl, isGeneratingGif, isGeneratingLive, burstsCount, livesCount, generateGif]);
+  // No need to generate GIF client-side anymore! 
+  // We use the MP4 files directly from Supabase.
 
   if (!isClient) return null;
 
@@ -87,8 +46,8 @@ function DownloadContent() {
   }
 
   // Determine current display URL based on active tab
-  const currentGifUrl = session ? gifBlobUrl : legacyGif;
-  const currentLiveUrl = session ? liveBlobUrl : legacyLive;
+  const currentGifUrl = session ? `${supabaseUrl}/storage/v1/object/public/photos/${session}/burst.mp4` : legacyGif;
+  const currentLiveUrl = session ? `${supabaseUrl}/storage/v1/object/public/photos/${session}/live.mp4` : legacyLive;
   const hasGif = session ? burstsCount > 0 : !!legacyGif;
   const hasLive = session ? livesCount > 0 : !!legacyLive;
   const hasRaw = session ? burstsCount > 0 : false;
@@ -121,10 +80,10 @@ function DownloadContent() {
 
       if (activeTab === 'live') {
         targetUrl = currentLiveUrl;
-        ext = 'gif';
+        ext = session ? 'mp4' : 'gif'; // legacy uses gif, new uses mp4
       } else if (activeTab === 'gif') {
         targetUrl = currentGifUrl;
-        ext = 'gif';
+        ext = session ? 'mp4' : 'gif';
       } else {
         targetUrl = imageUrl;
         ext = 'png';
@@ -170,9 +129,7 @@ function DownloadContent() {
     }
   };
 
-  const isCurrentTabLoading =
-    (activeTab === 'gif' && isGeneratingGif) ||
-    (activeTab === 'live' && isGeneratingLive);
+  const isCurrentTabLoading = false; // Video tags will handle their own loading automatically
 
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center text-primary px-5 py-12 relative overflow-hidden font-sans">
@@ -258,17 +215,39 @@ function DownloadContent() {
                   priority
                 />
               ) : activeTab === 'gif' && currentGifUrl ? (
-                <img
-                  src={currentGifUrl}
-                  alt="Mémoire GIF Raw"
-                  className="w-full h-full object-contain p-2"
-                />
+                session ? (
+                  <video
+                    src={currentGifUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-contain p-2"
+                  />
+                ) : (
+                  <img
+                    src={currentGifUrl}
+                    alt="Mémoire GIF Raw"
+                    className="w-full h-full object-contain p-2"
+                  />
+                )
               ) : activeTab === 'live' && currentLiveUrl ? (
-                <img
-                  src={currentLiveUrl}
-                  alt="Mémoire Live Photo"
-                  className="w-full h-full object-contain p-2"
-                />
+                session ? (
+                  <video
+                    src={currentLiveUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full object-contain p-2"
+                  />
+                ) : (
+                  <img
+                    src={currentLiveUrl}
+                    alt="Mémoire Live Photo"
+                    className="w-full h-full object-contain p-2"
+                  />
+                )
               ) : activeTab === 'raw' && hasRaw ? (
                 <div className="absolute inset-0 overflow-y-auto p-2 grid grid-cols-2 gap-2 bg-surface custom-scrollbar">
                   {Array.from({ length: burstsCount }).map((_, i) => (
