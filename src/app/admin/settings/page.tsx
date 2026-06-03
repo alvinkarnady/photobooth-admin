@@ -33,6 +33,7 @@ export default function SettingsPage() {
   // App Settings State
   const [enablePayment, setEnablePayment] = useState(true);
   const [price, setPrice] = useState<number | ''>(20000);
+  const [sessionTimeout, setSessionTimeout] = useState<number | ''>(10);
   const [isSavingApp, setIsSavingApp] = useState(false);
   const [appMessage, setAppMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -62,6 +63,9 @@ export default function SettingsPage() {
         setEnablePayment(data.enable_payment);
         if (data.price !== undefined) {
           setPrice(data.price);
+        }
+        if (data.session_timeout !== undefined) {
+          setSessionTimeout(data.session_timeout / 60);
         }
       }
     });
@@ -166,6 +170,10 @@ export default function SettingsPage() {
       setAppMessage({ type: 'error', text: 'Harga tidak boleh kosong!' });
       return;
     }
+    if (sessionTimeout === '') {
+      setAppMessage({ type: 'error', text: 'Batas waktu tidak boleh kosong!' });
+      return;
+    }
 
     setIsSavingApp(true);
     setAppMessage(null);
@@ -175,6 +183,7 @@ export default function SettingsPage() {
       const { error } = await supabase.from('app_settings').update({
         enable_payment: enablePayment,
         price: Number(price),
+        session_timeout: Number(sessionTimeout) * 60,
       }).eq('id', 1);
 
       if (error) {
@@ -237,6 +246,25 @@ export default function SettingsPage() {
                   onChange={(e) => setPrice(e.target.value === '' ? '' : Number(e.target.value))}
                   className="w-full pl-12 pr-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all font-medium"
                   placeholder="20000"
+                />
+              </div>
+            </div>
+
+            {/* Session Timeout Input */}
+            <div className="p-4 border border-slate-200 rounded-xl">
+              <label className="block mb-2">
+                <div className="font-semibold text-slate-800">Batas Waktu Sesi (Menit)</div>
+                <div className="text-xs text-slate-500 mt-1">Lama waktu pengguna diizinkan berada dalam satu sesi foto sebelum dialihkan otomatis ke layar awal.</div>
+              </label>
+              <div className="relative mt-2">
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={sessionTimeout}
+                  onChange={(e) => setSessionTimeout(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500/20 focus:border-pink-500 transition-all font-medium"
+                  placeholder="10"
                 />
               </div>
             </div>
