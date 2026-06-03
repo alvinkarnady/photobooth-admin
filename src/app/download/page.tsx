@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useEffect, useState, useCallback } from 'react';
+import { Suspense, useEffect, useState, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
 
@@ -22,6 +22,19 @@ function DownloadContent() {
   const [activeTab, setActiveTab] = useState<'photo' | 'gif' | 'live' | 'raw'>('photo');
   const [isDownloading, setIsDownloading] = useState(false);
 
+  // MP4 availability state
+  const [burstMp4Available, setBurstMp4Available] = useState<boolean | null>(null);
+  const [liveMp4Available, setLiveMp4Available] = useState<boolean | null>(null);
+
+  // Slideshow state for GIF (raw photos cycling)
+  const [gifFrameIndex, setGifFrameIndex] = useState(0);
+
+  // Slideshow state for Live Photo (live frames cycling)
+  const [liveFrameIndex, setLiveFrameIndex] = useState(0);
+
+  const gifIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const liveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -32,8 +45,53 @@ function DownloadContent() {
     ? `${supabaseUrl}/storage/v1/object/public/photos/${session}/photo.png`
     : legacyUrl;
 
-  // No need to generate GIF client-side anymore! 
-  // We use the MP4 files directly from Supabase.
+  const burstMp4Url = session ? `${supabaseUrl}/storage/v1/object/public/photos/${session}/burst.mp4` : null;
+  const liveMp4Url = session ? `${supabaseUrl}/storage/v1/object/public/photos/${session}/live.mp4` : null;
+
+  const hasGif = session ? burstsCount > 0 : !!legacyGif;
+  const hasLive = session ? livesCount > 0 : !!legacyLive;
+  const hasRaw = session ? burstsCount > 0 : false;
+
+  // Check if MP4 files exist on server
+  useEffect(() => {
+    if (!session || !supabaseUrl) return;
+
+    if (burstsCount > 0 && burstMp4Url) {
+      fetch(burstMp4Url, { method: 'HEAD' })
+        .then(res => setBurstMp4Available(res.ok))
+        .catch(() => setBurstMp4Available(false));
+    }
+
+    if (livesCount > 0 && liveMp4Url) {
+      fetch(liveMp4Url, { method: 'HEAD' })
+        .then(res => setLiveMp4Available(res.ok))
+        .catch(() => setLiveMp4Available(false));
+    }
+  }, [session, supabaseUrl, burstsCount, livesCount, burstMp4Url, liveMp4Url]);
+
+  // GIF slideshow: cycle through raw photos at ~1 photo/sec
+  useEffect(() => {
+    if (activeTab === 'gif' && burstsCount > 1 && !burstMp4Available) {
+      gifIntervalRef.current = setInterval(() => {
+        setGifFrameIndex(prev => (prev + 1) % burstsCount);
+      }, 1000); // 1 second per photo
+    }
+    return () => {
+      if (gifIntervalRef.current) clearInterval(gifIntervalRef.current);
+    };
+  }, [activeTab, burstsCount, burstMp4Available]);
+
+  // Live Photo slideshow: cycle through live frames at liveDelay ms
+  useEffect(() => {
+    if (activeTab === 'live' && livesCount > 1 && !liveMp4Available) {
+      liveIntervalRef.current = setInterval(() => {
+        setLiveFrameIndex(prev => (prev + 1) % livesCount);
+      }, liveDelay);
+    }
+    return () => {
+      if (liveIntervalRef.current) clearInterval(liveIntervalRef.current);
+    };
+  }, [activeTab, livesCount, liveDelay, liveMp4Available]);
 
   if (!isClient) return null;
 
@@ -45,12 +103,11 @@ function DownloadContent() {
     );
   }
 
-  // Determine current display URL based on active tab
-  const currentGifUrl = session ? `${supabaseUrl}/storage/v1/object/public/photos/${session}/burst.mp4` : legacyGif;
-  const currentLiveUrl = session ? `${supabaseUrl}/storage/v1/object/public/photos/${session}/live.mp4` : legacyLive;
-  const hasGif = session ? burstsCount > 0 : !!legacyGif;
-  const hasLive = session ? livesCount > 0 : !!legacyLive;
-  const hasRaw = session ? burstsCount > 0 : false;
+  // Build URLs for individual frames
+  const getBurstFrameUrl = (i: number) =>
+    `${supabaseUrl}/storage/v1/object/public/photos/${session}/burst_${i}.png`;
+  const getLiveFrameUrl = (i: number) =>
+    `${supabaseUrl}/storage/v1/object/public/photos/${session}/live_${i}.png`;
 
   const handleDownload = async () => {
     try {
@@ -59,7 +116,7 @@ function DownloadContent() {
       if (activeTab === 'raw') {
         // Download multiple raw photos
         for (let i = 0; i < burstsCount; i++) {
-          const rawUrl = `${supabaseUrl}/storage/v1/object/public/photos/${session}/burst_${i}.png`;
+          const rawUrl = getBurstFrameUrl(i);
           const response = await fetch(rawUrl);
           const blob = await response.blob();
           const url = window.URL.createObjectURL(blob);
@@ -70,7 +127,7 @@ function DownloadContent() {
           a.click();
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
-          await new Promise(r => setTimeout(r, 400)); // delay to prevent browser block
+          await new Promise(r => setTimeout(r, 400));
         }
         return;
       }
@@ -79,11 +136,43 @@ function DownloadContent() {
       let ext = 'png';
 
       if (activeTab === 'live') {
-        targetUrl = currentLiveUrl;
-        ext = session ? 'mp4' : 'gif'; // legacy uses gif, new uses mp4
+        if (liveMp4Available && liveMp4Url) {
+          targetUrl = liveMp4Url;
+          ext = 'mp4';
+        } else if (legacyLive) {
+          targetUrl = legacyLive;
+          ext = 'gif';
+        } else {
+          // Fallback: download individual live frames as zip would be complex,
+          // so download the current visible frame
+          targetUrl = getLiveFrameUrl(liveFrameIndex);
+          ext = 'png';
+        }
       } else if (activeTab === 'gif') {
-        targetUrl = currentGifUrl;
-        ext = session ? 'mp4' : 'gif';
+        if (burstMp4Available && burstMp4Url) {
+          targetUrl = burstMp4Url;
+          ext = 'mp4';
+        } else if (legacyGif) {
+          targetUrl = legacyGif;
+          ext = 'gif';
+        } else {
+          // Download all raw photos individually
+          for (let i = 0; i < burstsCount; i++) {
+            const rawUrl = getBurstFrameUrl(i);
+            const response = await fetch(rawUrl);
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Mémoire_GIF_${i + 1}_${new Date().getTime()}.png`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            await new Promise(r => setTimeout(r, 400));
+          }
+          return;
+        }
       } else {
         targetUrl = imageUrl;
         ext = 'png';
@@ -129,7 +218,117 @@ function DownloadContent() {
     }
   };
 
-  const isCurrentTabLoading = false; // Video tags will handle their own loading automatically
+  // Render the preview content for the active tab
+  const renderPreview = () => {
+    if (activeTab === 'photo') {
+      return (
+        <Image
+          src={imageUrl}
+          alt="Mémoire Result"
+          fill
+          sizes="100vw"
+          className="object-contain p-2"
+          priority
+        />
+      );
+    }
+
+    if (activeTab === 'gif' && hasGif) {
+      // If MP4 available, show video
+      if (burstMp4Available && burstMp4Url) {
+        return (
+          <video
+            src={burstMp4Url}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-contain p-2"
+          />
+        );
+      }
+      // Legacy GIF
+      if (legacyGif) {
+        return (
+          <img
+            src={legacyGif}
+            alt="Mémoire GIF"
+            className="w-full h-full object-contain p-2"
+          />
+        );
+      }
+      // Fallback: PNG slideshow of raw photos
+      if (session && burstsCount > 0) {
+        return (
+          <img
+            key={gifFrameIndex}
+            src={getBurstFrameUrl(gifFrameIndex)}
+            alt={`Raw photo ${gifFrameIndex + 1}`}
+            className="w-full h-full object-contain p-2 transition-opacity duration-200"
+          />
+        );
+      }
+    }
+
+    if (activeTab === 'live' && hasLive) {
+      // If MP4 available, show video
+      if (liveMp4Available && liveMp4Url) {
+        return (
+          <video
+            src={liveMp4Url}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-contain p-2"
+          />
+        );
+      }
+      // Legacy GIF
+      if (legacyLive) {
+        return (
+          <img
+            src={legacyLive}
+            alt="Mémoire Live Photo"
+            className="w-full h-full object-contain p-2"
+          />
+        );
+      }
+      // Fallback: PNG slideshow of live frames
+      if (session && livesCount > 0) {
+        return (
+          <img
+            key={liveFrameIndex}
+            src={getLiveFrameUrl(liveFrameIndex)}
+            alt={`Live frame ${liveFrameIndex + 1}`}
+            className="w-full h-full object-contain p-2"
+          />
+        );
+      }
+    }
+
+    if (activeTab === 'raw' && hasRaw) {
+      return (
+        <div className="absolute inset-0 overflow-y-auto p-2 grid grid-cols-2 gap-2 bg-surface custom-scrollbar">
+          {Array.from({ length: burstsCount }).map((_, i) => (
+            <img
+              key={i}
+              src={getBurstFrameUrl(i)}
+              alt={`Raw ${i + 1}`}
+              className="w-full aspect-[3/4] object-cover border border-outline-variant/30 shadow-sm"
+              loading="lazy"
+            />
+          ))}
+        </div>
+      );
+    }
+
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-surface-container-lowest">
+        <p className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Not Available</p>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-surface flex flex-col items-center text-primary px-5 py-12 relative overflow-hidden font-sans">
@@ -146,7 +345,7 @@ function DownloadContent() {
           </h1>
         </div>
 
-        {/* Tab switcher — minimalist border style */}
+        {/* Tab switcher */}
         {(hasGif || hasLive) && (
           <div className="flex w-full border-b border-outline-variant mb-10">
             <button
@@ -194,86 +393,20 @@ function DownloadContent() {
           </div>
         )}
 
-        {/* Minimalist photo frame */}
+        {/* Photo frame */}
         <div className="relative w-full mb-12">
           <div className="relative aspect-[3/4] w-full bg-surface-container border border-outline-variant shadow-sm overflow-hidden p-2 md:p-4">
             <div className="relative w-full h-full bg-white border border-outline-variant/50">
-              {isCurrentTabLoading ? (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-surface-container-lowest">
-                  <div className="w-8 h-8 border-[2px] border-outline-variant border-t-primary rounded-full animate-spin mb-4" />
-                  <p className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">
-                    Crafting {activeTab === 'live' ? 'Live Photo' : 'GIF'}...
-                  </p>
-                </div>
-              ) : activeTab === 'photo' ? (
-                <Image
-                  src={imageUrl}
-                  alt="Mémoire Result"
-                  fill
-                  sizes="100vw"
-                  className="object-contain p-2"
-                  priority
-                />
-              ) : activeTab === 'gif' && currentGifUrl ? (
-                session ? (
-                  <video
-                    src={currentGifUrl}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-contain p-2"
-                  />
-                ) : (
-                  <img
-                    src={currentGifUrl}
-                    alt="Mémoire GIF Raw"
-                    className="w-full h-full object-contain p-2"
-                  />
-                )
-              ) : activeTab === 'live' && currentLiveUrl ? (
-                session ? (
-                  <video
-                    src={currentLiveUrl}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full object-contain p-2"
-                  />
-                ) : (
-                  <img
-                    src={currentLiveUrl}
-                    alt="Mémoire Live Photo"
-                    className="w-full h-full object-contain p-2"
-                  />
-                )
-              ) : activeTab === 'raw' && hasRaw ? (
-                <div className="absolute inset-0 overflow-y-auto p-2 grid grid-cols-2 gap-2 bg-surface custom-scrollbar">
-                  {Array.from({ length: burstsCount }).map((_, i) => (
-                    <img
-                      key={i}
-                      src={`${supabaseUrl}/storage/v1/object/public/photos/${session}/burst_${i}.png`}
-                      alt={`Raw ${i + 1}`}
-                      className="w-full aspect-[3/4] object-cover border border-outline-variant/30 shadow-sm"
-                      loading="lazy"
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-surface-container-lowest">
-                  <p className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Not Available</p>
-                </div>
-              )}
+              {renderPreview()}
             </div>
           </div>
         </div>
 
-        {/* Action Buttons — editorial style */}
+        {/* Action Buttons */}
         <div className="w-full flex flex-col sm:flex-row gap-4 mb-8">
           <button
             onClick={handleDownload}
-            disabled={isDownloading || isCurrentTabLoading}
+            disabled={isDownloading}
             className="flex-1 py-4 px-6 bg-primary text-on-primary font-label-lg text-label-lg uppercase tracking-widest rounded-none hover:opacity-90 transition-opacity flex items-center justify-center gap-3 disabled:opacity-50"
           >
             {isDownloading ? (
