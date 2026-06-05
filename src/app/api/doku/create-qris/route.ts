@@ -2,12 +2,18 @@ import { NextResponse } from 'next/server';
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!; // Must use Service Role to bypass RLS for inserting
-const supabase = createClient(supabaseUrl, supabaseKey);
-
 export async function POST(req: Request) {
   try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // Must use Service Role to bypass RLS for inserting
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('Supabase credentials missing in .env');
+      return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
     const { amount } = await req.json();
     
     // 1. Generate unique Order ID / Invoice Number
