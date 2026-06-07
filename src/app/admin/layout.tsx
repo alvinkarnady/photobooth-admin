@@ -15,6 +15,7 @@ import {
   Ticket,
   History,
   ChevronDown,
+  Palette,
 } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase";
 
@@ -85,6 +86,7 @@ export default function AdminLayout({
     { name: "Manajemen Voucher", href: "/admin/vouchers", icon: Ticket },
     { name: "Manajemen Frame", href: "/admin/frames", icon: ImageIcon },
     { name: "Buat Frame Baru", href: "/admin/frames/create", icon: PlusSquare },
+    { name: "LUT Filters", href: "/admin/luts", icon: Palette },
     { name: "Kategori Kertas", href: "/admin/categories", icon: FileText },
     { name: "Manajemen Download", href: "/admin/downloads", icon: Download },
     { name: "Pengaturan", href: "/admin/settings", icon: Settings },
