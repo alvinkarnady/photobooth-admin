@@ -32,6 +32,9 @@ function DownloadContent() {
   // Slideshow state for Live Photo (live frames cycling)
   const [liveFrameIndex, setLiveFrameIndex] = useState(0);
 
+  // Selected raw photos
+  const [selectedRaws, setSelectedRaws] = useState<number[]>([]);
+
   const gifIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const liveIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -114,8 +117,13 @@ function DownloadContent() {
       setIsDownloading(true);
 
       if (activeTab === 'raw') {
-        // Download multiple raw photos
-        for (let i = 0; i < burstsCount; i++) {
+        if (selectedRaws.length === 0) {
+          alert('Pilih setidaknya satu foto raw untuk diunduh.');
+          setIsDownloading(false);
+          return;
+        }
+        // Download selected raw photos
+        for (const i of selectedRaws) {
           const rawUrl = getBurstFrameUrl(i);
           const response = await fetch(rawUrl);
           const blob = await response.blob();
@@ -309,16 +317,52 @@ function DownloadContent() {
 
     if (activeTab === 'raw' && hasRaw) {
       return (
-        <div className="absolute inset-0 overflow-y-auto p-2 grid grid-cols-2 gap-2 bg-surface custom-scrollbar">
-          {Array.from({ length: burstsCount }).map((_, i) => (
-            <img
-              key={i}
-              src={getBurstFrameUrl(i)}
-              alt={`Raw ${i + 1}`}
-              className="w-full aspect-[3/4] object-cover border border-outline-variant/30 shadow-sm"
-              loading="lazy"
-            />
-          ))}
+        <div className="absolute inset-0 flex flex-col bg-surface">
+          <div className="p-3 text-center border-b border-outline-variant/30">
+            <p className="text-xs text-secondary mb-2">Pilih foto yang ingin diunduh</p>
+            <div className="flex justify-center gap-4">
+              <button 
+                onClick={() => setSelectedRaws(Array.from({ length: burstsCount }, (_, i) => i))}
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Pilih Semua
+              </button>
+              <button 
+                onClick={() => setSelectedRaws([])}
+                className="text-xs font-medium text-secondary hover:underline"
+              >
+                Batal Pilih
+              </button>
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto p-2 grid grid-cols-2 gap-2 custom-scrollbar">
+            {Array.from({ length: burstsCount }).map((_, i) => {
+              const isSelected = selectedRaws.includes(i);
+              return (
+                <div 
+                  key={i} 
+                  className="relative cursor-pointer group"
+                  onClick={() => {
+                    if (isSelected) {
+                      setSelectedRaws(prev => prev.filter(id => id !== i));
+                    } else {
+                      setSelectedRaws(prev => [...prev, i]);
+                    }
+                  }}
+                >
+                  <img
+                    src={getBurstFrameUrl(i)}
+                    alt={`Raw ${i + 1}`}
+                    className={`w-full aspect-[3/4] object-cover transition-all ${isSelected ? 'border-2 border-primary shadow-md' : 'border border-outline-variant/30 opacity-80 hover:opacity-100'}`}
+                    loading="lazy"
+                  />
+                  <div className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-primary border-primary text-on-primary' : 'bg-surface/50 border-outline text-transparent'}`}>
+                    <span className="material-symbols-outlined text-[14px]">check</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       );
     }
@@ -406,7 +450,7 @@ function DownloadContent() {
         <div className="w-full flex flex-col sm:flex-row gap-4 mb-8">
           <button
             onClick={handleDownload}
-            disabled={isDownloading}
+            disabled={isDownloading || (activeTab === 'raw' && selectedRaws.length === 0)}
             className="flex-1 py-4 px-6 bg-primary text-on-primary font-label-lg text-label-lg uppercase tracking-widest rounded-none hover:opacity-90 transition-opacity flex items-center justify-center gap-3 disabled:opacity-50"
           >
             {isDownloading ? (
@@ -417,7 +461,11 @@ function DownloadContent() {
             ) : (
               <span className="material-symbols-outlined font-light">download</span>
             )}
-            {isDownloading ? 'Saving...' : `Save ${activeTab === 'live' ? 'Live Photo' : activeTab === 'gif' ? 'GIF' : activeTab === 'raw' ? 'Raw Photos' : 'Photo'}`}
+            {isDownloading 
+              ? 'Saving...' 
+              : activeTab === 'raw'
+                ? (selectedRaws.length > 0 ? `Save ${selectedRaws.length} Photos` : 'Select Photos')
+                : `Save ${activeTab === 'live' ? 'Live Photo' : activeTab === 'gif' ? 'GIF' : 'Photo'}`}
           </button>
 
           <button
