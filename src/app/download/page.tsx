@@ -164,21 +164,8 @@ function DownloadContent() {
           targetUrl = legacyGif;
           ext = 'gif';
         } else {
-          // Download all raw photos individually
-          for (let i = 0; i < burstsCount; i++) {
-            const rawUrl = getBurstFrameUrl(i);
-            const response = await fetch(rawUrl);
-            const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `Mémoire_GIF_${i + 1}_${new Date().getTime()}.png`;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-            await new Promise(r => setTimeout(r, 400));
-          }
+          alert('Video MP4 tidak tersedia untuk sesi ini.');
+          setIsDownloading(false);
           return;
         }
       } else {
