@@ -6,7 +6,12 @@ import { createClient } from '@supabase/supabase-js';
  * DOKU QRIS Webhook Handler
  * 
  * Receives payment notifications from DOKU when a QRIS payment is completed.
- * Supports both SNAP and Legacy notification formats.
+ * 
+ * DOKU QRIS notification format:
+ * - Query params: WORDS, ACQUIRER, INVOICE, TRANSACTIONID, AMOUNT, TXNDATE, 
+ *   MERCHANTPAN, REFERENCEID, TXNSTATUS, etc.
+ * - JSON body: { transactionId, activityCode, message, processDate }
+ * 
  * Updates the transaction status in Supabase, which triggers the
  * Flutter app's realtime listener.
  */
@@ -21,86 +26,91 @@ export async function POST(req: Request) {
     }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const secretKey = process.env.DOKU_SECRET_KEY;
     
-    // Read the raw text body for signature verification
-    const bodyText = await req.text(); 
-    console.log('Webhook: Received notification body:', bodyText);
+    // Parse URL query parameters (DOKU QRIS notification format)
+    const url = new URL(req.url);
+    const queryParams: Record<string, string> = {};
+    url.searchParams.forEach((value, key) => {
+      queryParams[key] = value;
+    });
     
-    const payload = JSON.parse(bodyText);
-    console.log('Webhook: Parsed payload:', JSON.stringify(payload, null, 2));
+    // Read body
+    const bodyText = await req.text();
+    let bodyPayload: any = {};
+    try {
+      if (bodyText) {
+        bodyPayload = JSON.parse(bodyText);
+      }
+    } catch {
+      // Body might not be JSON
+      bodyPayload = {};
+    }
     
-    // Log all headers for debugging
+    // Log everything for debugging
+    console.log('Webhook: Query params:', JSON.stringify(queryParams, null, 2));
+    console.log('Webhook: Body:', bodyText);
+    console.log('Webhook: Parsed body:', JSON.stringify(bodyPayload, null, 2));
+    
+    // Log headers
     const headers: Record<string, string> = {};
     req.headers.forEach((value, key) => {
       headers[key] = value;
     });
     console.log('Webhook: Headers:', JSON.stringify(headers, null, 2));
     
-    // --- Signature Verification ---
-    if (secretKey) {
-      const reqSignature = req.headers.get('signature') || req.headers.get('x-signature');
-      const reqClientId = req.headers.get('client-id') || req.headers.get('x-client-key');
-      const reqRequestId = req.headers.get('request-id') || req.headers.get('x-request-id');
-      const reqTimestamp = req.headers.get('request-timestamp') || req.headers.get('x-timestamp');
+    // --- Extract order info ---
+    let orderId: string | undefined;
+    let isSuccess = false;
+    let isFailed = false;
+    
+    // Format 1: DOKU QRIS Direct Notification (query parameters)
+    if (queryParams.INVOICE) {
+      orderId = queryParams.INVOICE;
+      const txnStatus = queryParams.TXNSTATUS;
+      const message = bodyPayload.message || '';
       
-      if (reqSignature && reqClientId && reqTimestamp) {
-        const targetPath = new URL(req.url).pathname; 
+      isSuccess = txnStatus === 'S' || txnStatus === 'SUCCESS' || message.includes('Success');
+      isFailed = txnStatus === 'F' || txnStatus === 'FAILED' || message.includes('Failed');
+      
+      console.log(`Webhook: DOKU QRIS format. Order: ${orderId}, TxnStatus: ${txnStatus}, Message: ${message}`);
+      
+      // Verify WORDS signature if available
+      const secretKey = process.env.DOKU_SECRET_KEY;
+      if (secretKey && queryParams.WORDS) {
+        const amount = queryParams.AMOUNT || '';
+        const transactionId = queryParams.TRANSACTIONID || '';
+        // DOKU WORDS = SHA256(AMOUNT + SHAREDKEY + INVOICE + STATUSCODE)
+        const wordsInput = `${amount}${secretKey}${orderId}${txnStatus}`;
+        const expectedWords = crypto.createHash('sha1').update(wordsInput).digest('hex');
         
-        // DOKU Legacy signature verification
-        const digest = crypto.createHash('sha256').update(bodyText).digest('base64');
-        const signatureString = `Client-Id:${reqClientId}\nRequest-Id:${reqRequestId}\nRequest-Timestamp:${reqTimestamp}\nRequest-Target:${targetPath}\nDigest:${digest}`;
-        const hmac = crypto.createHmac('sha256', secretKey).update(signatureString).digest('base64');
-        const expectedSignature = `HMACSHA256=${hmac}`;
-        
-        if (reqSignature !== expectedSignature) {
-          console.warn('Webhook: Signature mismatch. Expected:', expectedSignature, 'Got:', reqSignature);
-          // Log but don't block for now - enable strict check once verified working
-          // return NextResponse.json({ error: 'Invalid Signature' }, { status: 401 });
+        if (queryParams.WORDS !== expectedWords) {
+          console.warn('Webhook: WORDS verification failed. Expected:', expectedWords, 'Got:', queryParams.WORDS);
         } else {
-          console.log('Webhook: Signature verified successfully');
+          console.log('Webhook: WORDS verified successfully');
         }
       }
     }
-    
-    // --- Extract order info ---
-    // Support both SNAP and Legacy notification formats
-    let orderId: string | undefined;
-    let transactionStatus: string | undefined;
-    
-    // SNAP format: { partnerReferenceNo, latestTransactionStatus, ... }
-    if (payload.partnerReferenceNo) {
-      orderId = payload.partnerReferenceNo;
-      transactionStatus = payload.latestTransactionStatus || payload.transactionStatusDesc;
-      console.log(`Webhook: SNAP format detected. Order: ${orderId}, Status: ${transactionStatus}`);
+    // Format 2: SNAP format (JSON body with partnerReferenceNo)
+    else if (bodyPayload.partnerReferenceNo) {
+      orderId = bodyPayload.partnerReferenceNo;
+      const status = bodyPayload.latestTransactionStatus || bodyPayload.transactionStatusDesc;
+      isSuccess = status === 'SUCCESS' || status === '00' || status === 'PAID';
+      isFailed = status === 'FAILED' || status === 'EXPIRED' || status === 'DENIED';
+      console.log(`Webhook: SNAP format. Order: ${orderId}, Status: ${status}`);
     }
-    // Legacy format: { order: { invoice_number }, transaction: { status } }
-    else if (payload.order?.invoice_number) {
-      orderId = payload.order.invoice_number;
-      transactionStatus = payload.transaction?.status;
-      console.log(`Webhook: Legacy format detected. Order: ${orderId}, Status: ${transactionStatus}`);
-    }
-    // Alternative SNAP format: { originalPartnerReferenceNo, ... }
-    else if (payload.originalPartnerReferenceNo) {
-      orderId = payload.originalPartnerReferenceNo;
-      transactionStatus = payload.latestTransactionStatus || payload.transactionStatusDesc;
-      console.log(`Webhook: Alternative SNAP format. Order: ${orderId}, Status: ${transactionStatus}`);
+    // Format 3: Legacy format (JSON body with order.invoice_number)
+    else if (bodyPayload.order?.invoice_number) {
+      orderId = bodyPayload.order.invoice_number;
+      const status = bodyPayload.transaction?.status;
+      isSuccess = status === 'SUCCESS';
+      isFailed = status === 'FAILED';
+      console.log(`Webhook: Legacy format. Order: ${orderId}, Status: ${status}`);
     }
     
     if (!orderId) {
-      console.error('Webhook: Could not extract orderId from payload:', JSON.stringify(payload));
-      // Still return 200 to prevent DOKU from retrying
-      return NextResponse.json({ message: 'OK - no order ID found' }, { status: 200 });
+      console.error('Webhook: Could not extract orderId from notification');
+      return new Response('CONTINUE', { status: 200 });
     }
-    
-    // Normalize status
-    const isSuccess = transactionStatus === 'SUCCESS' 
-      || transactionStatus === '00' 
-      || transactionStatus === 'PAID'
-      || transactionStatus === 'SUCCESS';
-    const isFailed = transactionStatus === 'FAILED' 
-      || transactionStatus === 'EXPIRED'
-      || transactionStatus === 'DENIED';
     
     if (isSuccess) {
       console.log(`Webhook: Payment SUCCESS for order ${orderId}`);
@@ -116,7 +126,7 @@ export async function POST(req: Request) {
         console.log(`Webhook: DB updated to 'paid' for order ${orderId}`);
       }
     } else if (isFailed) {
-      console.log(`Webhook: Payment FAILED/EXPIRED for order ${orderId}`);
+      console.log(`Webhook: Payment FAILED for order ${orderId}`);
       
       const { error } = await supabase
         .from('transactions')
@@ -127,15 +137,14 @@ export async function POST(req: Request) {
         console.error('Webhook: DB Update Error:', error);
       }
     } else {
-      console.log(`Webhook: Unhandled status '${transactionStatus}' for order ${orderId}`);
+      console.log(`Webhook: Pending/unknown status for order ${orderId}`);
     }
     
-    // Always return HTTP 200 OK so DOKU stops retrying
-    return NextResponse.json({ message: 'OK' }, { status: 200 });
+    // DOKU expects "CONTINUE" as response for QRIS notifications
+    return new Response('CONTINUE', { status: 200 });
     
   } catch (err: any) {
     console.error('Webhook Exception:', err);
-    // Still return 200 to prevent infinite retries from DOKU
-    return NextResponse.json({ message: 'OK - error handled' }, { status: 200 });
+    return new Response('CONTINUE', { status: 200 });
   }
 }

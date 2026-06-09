@@ -140,6 +140,7 @@ export async function POST(req: Request) {
         currency: "IDR",
       },
       merchantId: "ID1026530794100",
+      terminalId: "A01",
       additionalInfo: {},
     };
     const qrisBodyString = JSON.stringify(qrisBody);
