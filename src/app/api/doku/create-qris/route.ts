@@ -132,10 +132,10 @@ export async function POST(req: Request) {
     const formattedAmount = `${Number(amount).toFixed(2)}`;
 
     // Request Body per DOKU SNAP spec
-    // merchantId = NMID from DOKU QRIS checkout page
+    // Try using QRIS checkout Client ID as merchantId
     const qrisBody = {
       partnerReferenceNo: orderId,
-      merchantId: "ID1026530794100",
+      merchantId: "95525",
       terminalId: "A01",
       amount: {
         value: formattedAmount,
@@ -143,7 +143,7 @@ export async function POST(req: Request) {
       },
       feeType: "MERCHANT",
       additionalInfo: {
-        isStatic: false,
+        postalCode: "90234",
       },
     };
     const qrisBodyString = JSON.stringify(qrisBody);
