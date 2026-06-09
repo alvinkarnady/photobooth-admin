@@ -208,6 +208,7 @@ export async function POST(req: Request) {
       amount: amount,
       status: "pending",
       qr_string: qrContent,
+      provider: "doku",
     });
 
     if (dbError) {
