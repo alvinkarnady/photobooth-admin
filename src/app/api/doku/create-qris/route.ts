@@ -68,8 +68,11 @@ export async function POST(req: Request) {
     // ====================================
     // STEP 1: Get Access Token B2B
     // ====================================
-    // Timestamp in ISO8601 format
-    const timestamp = new Date().toISOString();
+    // Timestamp in ISO8601 format required by DOKU SNAP: YYYY-MM-DDTHH:mm:ss+07:00
+    // Must NOT have milliseconds, must have timezone offset (not 'Z')
+    const now = new Date();
+    const pad = (n: number) => n.toString().padStart(2, "0");
+    const timestamp = `${now.getUTCFullYear()}-${pad(now.getUTCMonth() + 1)}-${pad(now.getUTCDate())}T${pad(now.getUTCHours())}:${pad(now.getUTCMinutes())}:${pad(now.getUTCSeconds())}Z`;
 
     // Asymmetric Signature: RSA-SHA256 with Merchant Private Key
     // StringToSign = clientId + "|" + timestamp
@@ -121,7 +124,8 @@ export async function POST(req: Request) {
     // ====================================
     const orderId = `MEMOIRE-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const externalId = `${Date.now()}`;
-    const qrisTimestamp = new Date().toISOString();
+    const qrisNow = new Date();
+    const qrisTimestamp = `${qrisNow.getUTCFullYear()}-${pad(qrisNow.getUTCMonth() + 1)}-${pad(qrisNow.getUTCDate())}T${pad(qrisNow.getUTCHours())}:${pad(qrisNow.getUTCMinutes())}:${pad(qrisNow.getUTCSeconds())}Z`;
     const targetPath = "/snap-adapter/b2b/v1.0/qr/qr-mpm-generate";
 
     // Format amount: must be string with 2 decimal places (e.g. "20000.00")
