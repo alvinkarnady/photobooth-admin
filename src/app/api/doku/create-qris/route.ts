@@ -132,18 +132,22 @@ export async function POST(req: Request) {
     const formattedAmount = `${Number(amount).toFixed(2)}`;
 
     // Request Body per DOKU SNAP spec
-    // merchantId = NMID from DOKU QRIS checkout page (not the API Client ID)
+    // merchantId = NMID from DOKU QRIS checkout page
     const qrisBody = {
       partnerReferenceNo: orderId,
+      merchantId: "ID1026530794100",
+      terminalId: "A01",
       amount: {
         value: formattedAmount,
         currency: "IDR",
       },
-      merchantId: "ID1026530794100",
-      terminalId: "A01",
-      additionalInfo: {},
+      feeType: "MERCHANT",
+      additionalInfo: {
+        isStatic: false,
+      },
     };
     const qrisBodyString = JSON.stringify(qrisBody);
+    console.log("DOKU: QRIS Request Body:", qrisBodyString);
 
     // Symmetric Signature for Transaction API:
     // HMAC-SHA512(secretKey, HTTPMethod + ":" + EndpointUrl + ":" + AccessToken + ":" + Lowercase(HexEncode(SHA-256(minify(RequestBody)))) + ":" + TimeStamp)
