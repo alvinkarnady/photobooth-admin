@@ -3,15 +3,18 @@ import crypto from "crypto";
 import { createClient } from "@supabase/supabase-js";
 
 /**
- * DOKU SNAP QRIS Integration
- * 
+ * DOKU SNAP QRIS Integration (Production)
+ *
  * Flow:
  * 1. Get Access Token B2B (POST /authorization/v1/access-token/b2b)
+ *    - Uses RSA-SHA256 asymmetric signature with Merchant Private Key
  * 2. Generate QRIS (POST /snap-adapter/b2b/v1.0/qr/qr-mpm-generate)
- * 
+ *    - Uses HMAC-SHA512 symmetric signature with Secret Key
+ *
  * Required env vars:
  * - DOKU_CLIENT_ID
- * - DOKU_SECRET_KEY (used as clientSecret for symmetric signature)
+ * - DOKU_SECRET_KEY
+ * - DOKU_PRIVATE_KEY (RSA PEM format)
  * - DOKU_IS_PROD
  * - NEXT_PUBLIC_SUPABASE_URL
  * - SUPABASE_SERVICE_ROLE_KEY
@@ -37,6 +40,7 @@ export async function POST(req: Request) {
     // --- DOKU Configuration ---
     const clientId = process.env.DOKU_CLIENT_ID;
     const secretKey = process.env.DOKU_SECRET_KEY;
+    const privateKeyPem = process.env.DOKU_PRIVATE_KEY;
     const isProd = process.env.DOKU_IS_PROD === "true";
     const baseUrl = isProd
       ? "https://api.doku.com"
@@ -45,24 +49,43 @@ export async function POST(req: Request) {
     if (!clientId || !secretKey) {
       console.error("DOKU credentials missing in .env");
       return NextResponse.json(
-        { error: "Server configuration error: DOKU" },
+        { error: "Server configuration error: DOKU credentials" },
         { status: 500 },
       );
     }
 
+    if (!privateKeyPem) {
+      console.error("DOKU_PRIVATE_KEY missing in .env");
+      return NextResponse.json(
+        { error: "Server configuration error: DOKU private key" },
+        { status: 500 },
+      );
+    }
+
+    // Parse the private key (handle escaped newlines from env var)
+    const privateKey = privateKeyPem.replace(/\\n/g, "\n");
+
     // ====================================
     // STEP 1: Get Access Token B2B
     // ====================================
-    const timestamp = new Date().toISOString(); // e.g. 2026-06-05T08:00:00.000Z
-    
-    // Asymmetric Signature for Access Token:
-    // Since we don't have RSA Private Key, we use HMAC-SHA256 with Secret Key as a workaround
-    // Formula: HMAC-SHA256(secretKey, clientId + "|" + timestamp)
+    // Timestamp in ISO8601 format
+    const timestamp = new Date().toISOString();
+
+    // Asymmetric Signature: RSA-SHA256 with Merchant Private Key
+    // StringToSign = clientId + "|" + timestamp
     const stringToSign = `${clientId}|${timestamp}`;
+
     const asymmetricSignature = crypto
-      .createHmac("sha256", secretKey)
-      .update(stringToSign)
-      .digest("base64");
+      .sign("sha256", Buffer.from(stringToSign), {
+        key: privateKey,
+        padding: crypto.constants.RSA_PKCS1_PADDING,
+      })
+      .toString("base64");
+
+    console.log("DOKU: Requesting access token...");
+    console.log("DOKU: Base URL:", baseUrl);
+    console.log("DOKU: Client ID:", clientId);
+    console.log("DOKU: Timestamp:", timestamp);
 
     const tokenResponse = await fetch(
       `${baseUrl}/authorization/v1/access-token/b2b`,
@@ -101,24 +124,27 @@ export async function POST(req: Request) {
     const qrisTimestamp = new Date().toISOString();
     const targetPath = "/snap-adapter/b2b/v1.0/qr/qr-mpm-generate";
 
+    // Format amount: must be string with 2 decimal places (e.g. "20000.00")
+    const formattedAmount = `${Number(amount).toFixed(2)}`;
+
     // Request Body per DOKU SNAP spec
     const qrisBody = {
       partnerReferenceNo: orderId,
       amount: {
-        value: `${amount}.00`, // e.g. "20000.00"
+        value: formattedAmount,
         currency: "IDR",
       },
-      merchantId: clientId, // Use Client ID as merchantId for sandbox
+      merchantId: clientId,
       terminalId: "MEMOIRE01",
       additionalInfo: {
-        postalCode: "90234", // Makassar postal code
-        feeType: "1", // No Tips
+        postalCode: "90234",
+        feeType: "1",
       },
     };
     const qrisBodyString = JSON.stringify(qrisBody);
 
     // Symmetric Signature for Transaction API:
-    // Formula: HMAC-SHA512(secretKey, HTTPMethod + ":" + EndpointUrl + ":" + AccessToken + ":" + Lowercase(HexEncode(SHA-256(minify(RequestBody)))) + ":" + TimeStamp)
+    // HMAC-SHA512(secretKey, HTTPMethod + ":" + EndpointUrl + ":" + AccessToken + ":" + Lowercase(HexEncode(SHA-256(minify(RequestBody)))) + ":" + TimeStamp)
     const bodyHash = crypto
       .createHash("sha256")
       .update(qrisBodyString)
@@ -129,6 +155,10 @@ export async function POST(req: Request) {
       .createHmac("sha512", secretKey)
       .update(symmetricStringToSign)
       .digest("base64");
+
+    console.log("DOKU: Generating QRIS...");
+    console.log("DOKU: Order ID:", orderId);
+    console.log("DOKU: Amount:", formattedAmount);
 
     const qrisResponse = await fetch(`${baseUrl}${targetPath}`, {
       method: "POST",
@@ -158,7 +188,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error: `Gagal membuat QRIS: ${qrisData.responseMessage || JSON.stringify(qrisData)}`,
-          debug: qrisData, // include full response for debugging
+          debug: qrisData,
         },
         { status: 400 },
       );
@@ -182,6 +212,8 @@ export async function POST(req: Request) {
         { status: 500 },
       );
     }
+
+    console.log("DOKU: QRIS created successfully for order:", orderId);
 
     // Return to Flutter
     return NextResponse.json({
