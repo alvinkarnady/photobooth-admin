@@ -42,14 +42,14 @@ function DownloadContent() {
     setIsClient(true);
   }, []);
 
-  // Construct photo URL from session
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  // Construct photo URL from session — using Cloudflare R2
+  const r2BaseUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || 'https://pub-39bcbb6191eb4a958c8210dc87371845.r2.dev';
   const imageUrl = session
-    ? `${supabaseUrl}/storage/v1/object/public/photos/${session}/photo.png`
+    ? `${r2BaseUrl}/photos/${session}/photo.png`
     : legacyUrl;
 
-  const burstMp4Url = session ? `${supabaseUrl}/storage/v1/object/public/photos/${session}/burst.mp4` : null;
-  const liveMp4Url = session ? `${supabaseUrl}/storage/v1/object/public/photos/${session}/live.mp4` : null;
+  const burstMp4Url = session ? `${r2BaseUrl}/photos/${session}/burst.mp4` : null;
+  const liveMp4Url = session ? `${r2BaseUrl}/photos/${session}/live.mp4` : null;
 
   const hasGif = session ? burstsCount > 0 : !!legacyGif;
   const hasLive = session ? livesCount > 0 : !!legacyLive;
@@ -57,7 +57,7 @@ function DownloadContent() {
 
   // Check if MP4 files exist on server
   useEffect(() => {
-    if (!session || !supabaseUrl) return;
+    if (!session) return;
 
     if (burstsCount > 0 && burstMp4Url) {
       fetch(burstMp4Url, { method: 'HEAD' })
@@ -70,7 +70,7 @@ function DownloadContent() {
         .then(res => setLiveMp4Available(res.ok))
         .catch(() => setLiveMp4Available(false));
     }
-  }, [session, supabaseUrl, burstsCount, livesCount, burstMp4Url, liveMp4Url]);
+  }, [session, burstsCount, livesCount, burstMp4Url, liveMp4Url]);
 
   // GIF slideshow: cycle through raw photos at ~1 photo/sec
   useEffect(() => {
@@ -108,9 +108,9 @@ function DownloadContent() {
 
   // Build URLs for individual frames
   const getBurstFrameUrl = (i: number) =>
-    `${supabaseUrl}/storage/v1/object/public/photos/${session}/burst_${i}.png`;
+    `${r2BaseUrl}/photos/${session}/burst_${i}.png`;
   const getLiveFrameUrl = (i: number) =>
-    `${supabaseUrl}/storage/v1/object/public/photos/${session}/live_${i}.png`;
+    `${r2BaseUrl}/photos/${session}/live_${i}.png`;
 
   const handleDownload = async () => {
     try {
