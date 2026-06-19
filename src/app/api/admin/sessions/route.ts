@@ -1,55 +1,42 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3';
+import { r2Client, R2_BUCKET_NAME, R2_PUBLIC_URL } from '@/lib/r2';
 
 export async function GET() {
   try {
-    // List all items in the photos bucket root
-    const { data: allItems, error } = await supabase.storage
-      .from('photos')
-      .list('', {
-        limit: 1000,
-        sortBy: { column: 'created_at', order: 'desc' },
-      });
-
-    if (error) {
-      console.error('Error listing sessions:', error);
-      return NextResponse.json({ error: 'Failed to list sessions' }, { status: 500 });
-    }
-
-    const items = allItems || [];
-
-    // Separate folders (new format) from files (old format)
-    const folders = items.filter((item) => item.id === null && !item.metadata);
-    const rootFiles = items.filter((item) => item.id !== null && item.metadata);
-
+    const listCmd = new ListObjectsV2Command({
+      Bucket: R2_BUCKET_NAME,
+      Prefix: 'photos/',
+      Delimiter: '/',
+    });
+    
+    const { CommonPrefixes, Contents } = await r2Client.send(listCmd);
+    
     // ---- Handle NEW format: folder-based sessions (e.g., {sessionId}/photo.png) ----
     const folderSessions = await Promise.all(
-      folders.map(async (folder) => {
-        const { data: files, error: filesError } = await supabase.storage
-          .from('photos')
-          .list(folder.name, { limit: 100 });
-
-        if (filesError || !files || files.length === 0) return null;
-
-        const photoFile = files.find((f) => f.name === 'photo.png');
-        const burstFiles = files.filter((f) => f.name.startsWith('burst_'));
-        const liveFiles = files.filter((f) => f.name.startsWith('live_'));
-        const totalSize = files.reduce(
-          (acc, f) => acc + (f.metadata?.size || 0),
-          0
-        );
-        const createdAt =
-          photoFile?.created_at || files[0]?.created_at || folder.created_at;
-        const photoUrl = photoFile
-          ? `${supabaseUrl}/storage/v1/object/public/photos/${folder.name}/photo.png`
-          : null;
-
+      (CommonPrefixes || []).map(async (folder) => {
+        const prefix = folder.Prefix!;
+        const sessionId = prefix.replace('photos/', '').replace('/', '');
+        
+        const filesCmd = new ListObjectsV2Command({
+          Bucket: R2_BUCKET_NAME,
+          Prefix: prefix,
+        });
+        
+        const { Contents: files } = await r2Client.send(filesCmd);
+        
+        if (!files || files.length === 0) return null;
+        
+        const photoFile = files.find(f => f.Key?.endsWith('photo.png'));
+        const burstFiles = files.filter(f => f.Key?.includes('burst_'));
+        const liveFiles = files.filter(f => f.Key?.includes('live_'));
+        
+        const totalSize = files.reduce((acc, f) => acc + (f.Size || 0), 0);
+        const createdAt = photoFile?.LastModified || files[0].LastModified;
+        const photoUrl = photoFile ? `${R2_PUBLIC_URL}/${photoFile.Key}` : null;
+        
         return {
-          id: folder.name,
+          id: sessionId,
           photoUrl,
           fileCount: files.length,
           burstCount: burstFiles.length,
@@ -60,19 +47,19 @@ export async function GET() {
         };
       })
     );
-
+    
     // ---- Handle OLD format: flat files at root (e.g., photo_123.png, live_123.gif) ----
-    // Group root files by their timestamp suffix
+    const rootFiles = (Contents || []).filter(f => f.Key !== 'photos/');
     const oldSessionsMap = new Map<
       string,
       { photos: typeof rootFiles; lives: typeof rootFiles; raws: typeof rootFiles }
     >();
-
+    
     for (const file of rootFiles) {
-      // Match patterns: photo_TIMESTAMP.png, live_TIMESTAMP.gif, raw_TIMESTAMP.gif
-      const photoMatch = file.name.match(/^photo_(\d+)\.(png|gif)$/);
-      const liveMatch = file.name.match(/^live_(\d+)\.(gif|png)$/);
-      const rawMatch = file.name.match(/^raw_(\d+)\.(gif|png)$/);
+      const name = file.Key!.replace('photos/', '');
+      const photoMatch = name.match(/^photo_(\d+)\.(png|gif)$/);
+      const liveMatch = name.match(/^live_(\d+)\.(gif|png)$/);
+      const rawMatch = name.match(/^raw_(\d+)\.(gif|png)$/);
 
       const timestamp = photoMatch?.[1] || liveMatch?.[1] || rawMatch?.[1];
       if (!timestamp) continue;
@@ -86,38 +73,28 @@ export async function GET() {
       else if (liveMatch) group.lives.push(file);
       else if (rawMatch) group.raws.push(file);
     }
-
-    const oldSessions = Array.from(oldSessionsMap.entries()).map(
-      ([timestamp, group]) => {
-        const allFiles = [...group.photos, ...group.lives, ...group.raws];
-        const totalSize = allFiles.reduce(
-          (acc, f) => acc + (f.metadata?.size || 0),
-          0
-        );
-        const pngFile = group.photos.find((f) => f.name.endsWith('.png'));
-        const createdAt = pngFile?.created_at || allFiles[0]?.created_at;
-        const photoUrl = pngFile
-          ? `${supabaseUrl}/storage/v1/object/public/photos/${pngFile.name}`
-          : null;
-
-        return {
-          id: `legacy_${timestamp}`,
-          photoUrl,
-          fileCount: allFiles.length,
-          burstCount: group.raws.length,
-          liveCount: group.lives.length,
-          totalSize,
-          createdAt,
-          format: 'legacy' as const,
-        };
-      }
-    );
-
+    
+    const oldSessions = Array.from(oldSessionsMap.entries()).map(([timestamp, group]) => {
+      const allFiles = [...group.photos, ...group.lives, ...group.raws];
+      const totalSize = allFiles.reduce((acc, f) => acc + (f.Size || 0), 0);
+      const pngFile = group.photos.find(f => f.Key!.endsWith('.png'));
+      const createdAt = pngFile?.LastModified || allFiles[0]?.LastModified;
+      const photoUrl = pngFile ? `${R2_PUBLIC_URL}/${pngFile.Key}` : null;
+      
+      return {
+        id: `legacy_${timestamp}`,
+        photoUrl,
+        fileCount: allFiles.length,
+        burstCount: group.raws.length,
+        liveCount: group.lives.length,
+        totalSize,
+        createdAt,
+        format: 'legacy' as const,
+      };
+    });
+    
     // Combine both formats
-    const allSessions = [
-      ...folderSessions.filter(Boolean),
-      ...oldSessions,
-    ].sort((a, b) => {
+    const allSessions = [...folderSessions.filter(Boolean), ...oldSessions].sort((a, b) => {
       const dateA = new Date(a!.createdAt || 0).getTime();
       const dateB = new Date(b!.createdAt || 0).getTime();
       return dateB - dateA;
@@ -149,51 +126,42 @@ export async function DELETE(req: NextRequest) {
 
     for (const sessionId of sessionIds) {
       try {
+        let keysToDelete: string[] = [];
+
         if (sessionId.startsWith('legacy_')) {
           // ---- OLD FORMAT: delete flat files from root ----
           const timestamp = sessionId.replace('legacy_', '');
-          const filesToDelete = [
-            `photo_${timestamp}.png`,
-            `photo_${timestamp}.gif`,
-            `live_${timestamp}.gif`,
-            `live_${timestamp}.png`,
-            `raw_${timestamp}.gif`,
-            `raw_${timestamp}.png`,
+          keysToDelete = [
+            `photos/photo_${timestamp}.png`,
+            `photos/photo_${timestamp}.gif`,
+            `photos/live_${timestamp}.gif`,
+            `photos/live_${timestamp}.png`,
+            `photos/raw_${timestamp}.gif`,
+            `photos/raw_${timestamp}.png`,
           ];
-
-          const { data, error: deleteError } = await supabase.storage
-            .from('photos')
-            .remove(filesToDelete);
-
-          if (deleteError) {
-            errors.push(`Failed to delete legacy ${timestamp}: ${deleteError.message}`);
-            continue;
-          }
-          deletedCount++;
         } else {
           // ---- NEW FORMAT: delete folder contents ----
-          const { data: files, error: listError } = await supabase.storage
-            .from('photos')
-            .list(sessionId, { limit: 200 });
+          const filesCmd = new ListObjectsV2Command({
+            Bucket: R2_BUCKET_NAME,
+            Prefix: `photos/${sessionId}/`,
+          });
+          const { Contents } = await r2Client.send(filesCmd);
 
-          if (listError) {
-            errors.push(`Failed to list files for ${sessionId}: ${listError.message}`);
-            continue;
+          if (Contents && Contents.length > 0) {
+            keysToDelete = Contents.map((f) => f.Key!).filter(Boolean);
           }
-
-          if (files && files.length > 0) {
-            const filePaths = files.map((f) => `${sessionId}/${f.name}`);
-            const { data, error: deleteError } = await supabase.storage
-              .from('photos')
-              .remove(filePaths);
-
-            if (deleteError) {
-              errors.push(`Failed to delete files for ${sessionId}: ${deleteError.message}`);
-              continue;
-            }
-          }
-          deletedCount++;
         }
+
+        if (keysToDelete.length > 0) {
+          const deleteCmd = new DeleteObjectsCommand({
+            Bucket: R2_BUCKET_NAME,
+            Delete: {
+              Objects: keysToDelete.map((Key) => ({ Key })),
+            },
+          });
+          await r2Client.send(deleteCmd);
+        }
+        deletedCount++;
       } catch (err) {
         errors.push(`Error processing ${sessionId}: ${String(err)}`);
       }

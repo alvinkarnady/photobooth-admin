@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-const supabase = createClient(supabaseUrl, supabaseKey);
+import { ListObjectsV2Command, DeleteObjectsCommand } from '@aws-sdk/client-s3';
+import { r2Client, R2_BUCKET_NAME } from '@/lib/r2';
 
 export async function POST(req: NextRequest) {
   try {
@@ -13,79 +10,81 @@ export async function POST(req: NextRequest) {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - maxAgeDays);
 
-    // List all items in the photos bucket root
-    const { data: allItems, error } = await supabase.storage
-      .from('photos')
-      .list('', {
-        limit: 1000,
-        sortBy: { column: 'created_at', order: 'asc' },
-      });
-
-    if (error) {
-      return NextResponse.json(
-        { error: 'Failed to list sessions', details: error.message },
-        { status: 500 }
-      );
-    }
-
-    const items = allItems || [];
-    const folders = items.filter((item) => item.id === null && !item.metadata);
-    const rootFiles = items.filter((item) => item.id !== null && item.metadata);
+    const listCmd = new ListObjectsV2Command({
+      Bucket: R2_BUCKET_NAME,
+      Prefix: 'photos/',
+      Delimiter: '/',
+    });
+    
+    const { CommonPrefixes, Contents } = await r2Client.send(listCmd);
 
     let deletedCount = 0;
     const deletedSessions: string[] = [];
 
     // ---- Clean up NEW format (folder-based) ----
-    for (const folder of folders) {
-      const { data: files, error: filesError } = await supabase.storage
-        .from('photos')
-        .list(folder.name, { limit: 200 });
-
-      if (filesError || !files || files.length === 0) continue;
-
-      const createdAt = files[0]?.created_at || folder.created_at;
-      if (!createdAt) continue;
-
-      if (new Date(createdAt) < cutoffDate) {
-        const filePaths = files.map((f) => `${folder.name}/${f.name}`);
-        const { error: deleteError } = await supabase.storage
-          .from('photos')
-          .remove(filePaths);
-
-        if (!deleteError) {
+    if (CommonPrefixes) {
+      for (const folder of CommonPrefixes) {
+        const prefix = folder.Prefix!;
+        const sessionId = prefix.replace('photos/', '').replace('/', '');
+        
+        const filesCmd = new ListObjectsV2Command({
+          Bucket: R2_BUCKET_NAME,
+          Prefix: prefix,
+        });
+        
+        const { Contents: files } = await r2Client.send(filesCmd);
+        
+        if (!files || files.length === 0) continue;
+        
+        const createdAt = files[0].LastModified;
+        if (!createdAt) continue;
+        
+        if (new Date(createdAt) < cutoffDate) {
+          const deleteCmd = new DeleteObjectsCommand({
+            Bucket: R2_BUCKET_NAME,
+            Delete: {
+              Objects: files.map((f) => ({ Key: f.Key! })),
+            },
+          });
+          
+          await r2Client.send(deleteCmd);
           deletedCount++;
-          deletedSessions.push(folder.name);
+          deletedSessions.push(sessionId);
         }
       }
     }
 
     // ---- Clean up OLD format (flat files) ----
-    // Group by timestamp
+    const rootFiles = (Contents || []).filter((f) => f.Key !== 'photos/');
     const oldTimestamps = new Map<string, string[]>();
+    
     for (const file of rootFiles) {
-      const match = file.name.match(/^(?:photo|live|raw)_(\d+)\./);
+      const name = file.Key!.replace('photos/', '');
+      const match = name.match(/^(?:photo|live|raw)_(\d+)\./);
       if (!match) continue;
+      
       const timestamp = match[1];
       if (!oldTimestamps.has(timestamp)) {
         oldTimestamps.set(timestamp, []);
       }
-      oldTimestamps.get(timestamp)!.push(file.name);
+      oldTimestamps.get(timestamp)!.push(file.Key!);
     }
 
-    for (const [timestamp, fileNames] of oldTimestamps.entries()) {
-      // Use the timestamp to determine the date
+    for (const [timestamp, keys] of oldTimestamps.entries()) {
       const sessionDate = new Date(parseInt(timestamp));
       if (isNaN(sessionDate.getTime())) continue;
 
       if (sessionDate < cutoffDate) {
-        const { error: deleteError } = await supabase.storage
-          .from('photos')
-          .remove(fileNames);
-
-        if (!deleteError) {
-          deletedCount++;
-          deletedSessions.push(`legacy_${timestamp}`);
-        }
+        const deleteCmd = new DeleteObjectsCommand({
+          Bucket: R2_BUCKET_NAME,
+          Delete: {
+            Objects: keys.map((Key) => ({ Key })),
+          },
+        });
+        
+        await r2Client.send(deleteCmd);
+        deletedCount++;
+        deletedSessions.push(`legacy_${timestamp}`);
       }
     }
 
