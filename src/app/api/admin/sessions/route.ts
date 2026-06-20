@@ -32,8 +32,7 @@ export async function GET() {
         const liveFiles = files.filter(f => f.Key?.includes('live_'));
         
         const totalSize = files.reduce((acc, f) => acc + (f.Size || 0), 0);
-        // Ensure createdAt is valid even if photoFile is missing
-        const createdAt = photoFile?.LastModified || (files.length > 0 ? files[0].LastModified : new Date());
+        const createdAt = photoFile?.LastModified || files[0].LastModified;
         const photoUrl = photoFile ? `${R2_PUBLIC_URL}/${photoFile.Key}` : null;
         
         return {
