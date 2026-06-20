@@ -1,8 +1,26 @@
 'use client';
 
-import { Suspense, useEffect, useState, useRef, useCallback } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+
+// Frame metadata types
+interface PhotoSlot {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  rotation?: number;
+  borderRadius?: number;
+  cameraShotIndex?: number;
+  isMirrored?: boolean;
+}
+
+interface FrameMeta {
+  canvasWidth: number;
+  canvasHeight: number;
+  photoSlots: PhotoSlot[];
+}
 
 function DownloadContent() {
   const searchParams = useSearchParams();
@@ -23,20 +41,19 @@ function DownloadContent() {
   const [isDownloading, setIsDownloading] = useState(false);
 
   // MP4 availability state
-  const [burstMp4Available, setBurstMp4Available] = useState<boolean | null>(null);
   const [liveMp4Available, setLiveMp4Available] = useState<boolean | null>(null);
+
+  // Frame metadata for live photo overlay
+  const [frameMeta, setFrameMeta] = useState<FrameMeta | null>(null);
+  const [frameOverlayAvailable, setFrameOverlayAvailable] = useState(false);
 
   // Slideshow state for GIF (raw photos cycling)
   const [gifFrameIndex, setGifFrameIndex] = useState(0);
-
-  // Slideshow state for Live Photo (live frames cycling)
-  const [liveFrameIndex, setLiveFrameIndex] = useState(0);
 
   // Selected raw photos
   const [selectedRaws, setSelectedRaws] = useState<number[]>([]);
 
   const gifIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const liveIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -48,53 +65,56 @@ function DownloadContent() {
     ? `${r2BaseUrl}/photos/${session}/photo.png`
     : legacyUrl;
 
-  const burstMp4Url = session ? `${r2BaseUrl}/photos/${session}/burst.mp4` : null;
   const liveMp4Url = session ? `${r2BaseUrl}/photos/${session}/live.mp4` : null;
+  const frameOverlayUrl = session ? `${r2BaseUrl}/photos/${session}/frame_overlay.png` : null;
+  const frameMetaUrl = session ? `${r2BaseUrl}/photos/${session}/frame_meta.json` : null;
 
   const hasGif = session ? burstsCount > 0 : !!legacyGif;
   const hasLive = session ? livesCount > 0 : !!legacyLive;
   const hasRaw = session ? burstsCount > 0 : false;
 
-  // Check if MP4 files exist on server
+  // Check if MP4 and frame overlay exist
   useEffect(() => {
     if (!session) return;
-
-    if (burstsCount > 0 && burstMp4Url) {
-      fetch(burstMp4Url, { method: 'HEAD' })
-        .then(res => setBurstMp4Available(res.ok))
-        .catch(() => setBurstMp4Available(false));
-    }
 
     if (livesCount > 0 && liveMp4Url) {
       fetch(liveMp4Url, { method: 'HEAD' })
         .then(res => setLiveMp4Available(res.ok))
         .catch(() => setLiveMp4Available(false));
     }
-  }, [session, burstsCount, livesCount, burstMp4Url, liveMp4Url]);
 
-  // GIF slideshow: cycle through raw photos at ~1 photo/sec
+    // Check frame overlay
+    if (frameOverlayUrl) {
+      fetch(frameOverlayUrl, { method: 'HEAD' })
+        .then(res => setFrameOverlayAvailable(res.ok))
+        .catch(() => setFrameOverlayAvailable(false));
+    }
+
+    // Fetch frame metadata
+    if (frameMetaUrl) {
+      fetch(frameMetaUrl)
+        .then(res => {
+          if (res.ok) return res.json();
+          return null;
+        })
+        .then(data => {
+          if (data) setFrameMeta(data as FrameMeta);
+        })
+        .catch(() => {});
+    }
+  }, [session, livesCount, liveMp4Url, frameOverlayUrl, frameMetaUrl]);
+
+  // GIF slideshow: cycle through raw photos
   useEffect(() => {
-    if (activeTab === 'gif' && burstsCount > 1 && !burstMp4Available) {
+    if (activeTab === 'gif' && burstsCount > 1) {
       gifIntervalRef.current = setInterval(() => {
         setGifFrameIndex(prev => (prev + 1) % burstsCount);
-      }, 1000); // 1 second per photo
+      }, 1000);
     }
     return () => {
       if (gifIntervalRef.current) clearInterval(gifIntervalRef.current);
     };
-  }, [activeTab, burstsCount, burstMp4Available]);
-
-  // Live Photo slideshow: cycle through live frames at liveDelay ms
-  useEffect(() => {
-    if (activeTab === 'live' && livesCount > 1 && !liveMp4Available) {
-      liveIntervalRef.current = setInterval(() => {
-        setLiveFrameIndex(prev => (prev + 1) % livesCount);
-      }, liveDelay);
-    }
-    return () => {
-      if (liveIntervalRef.current) clearInterval(liveIntervalRef.current);
-    };
-  }, [activeTab, livesCount, liveDelay, liveMp4Available]);
+  }, [activeTab, burstsCount]);
 
   if (!isClient) return null;
 
@@ -109,8 +129,6 @@ function DownloadContent() {
   // Build URLs for individual frames
   const getBurstFrameUrl = (i: number) =>
     `${r2BaseUrl}/photos/${session}/burst_${i}.png`;
-  const getLiveFrameUrl = (i: number) =>
-    `${r2BaseUrl}/photos/${session}/live_${i}.png`;
 
   const handleDownload = async () => {
     try {
@@ -151,23 +169,28 @@ function DownloadContent() {
           targetUrl = legacyLive;
           ext = 'gif';
         } else {
-          // Fallback: download individual live frames as zip would be complex,
-          // so download the current visible frame
-          targetUrl = getLiveFrameUrl(liveFrameIndex);
-          ext = 'png';
-        }
-      } else if (activeTab === 'gif') {
-        if (burstMp4Available && burstMp4Url) {
-          targetUrl = burstMp4Url;
-          ext = 'mp4';
-        } else if (legacyGif) {
-          targetUrl = legacyGif;
-          ext = 'gif';
-        } else {
-          alert('Video MP4 tidak tersedia untuk sesi ini.');
+          alert('Live Photo tidak tersedia untuk sesi ini.');
           setIsDownloading(false);
           return;
         }
+      } else if (activeTab === 'gif') {
+        // Download all burst frames as individual images
+        for (let i = 0; i < burstsCount; i++) {
+          const rawUrl = getBurstFrameUrl(i);
+          const response = await fetch(rawUrl);
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Mémoire_GIF_${i + 1}_${new Date().getTime()}.png`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          await new Promise(r => setTimeout(r, 400));
+        }
+        setIsDownloading(false);
+        return;
       } else {
         targetUrl = imageUrl;
         ext = 'png';
@@ -213,6 +236,58 @@ function DownloadContent() {
     }
   };
 
+  // Render Live Photo with frame overlay (video + PNG overlay)
+  const renderLivePhotoWithFrame = () => {
+    if (!frameMeta || !frameOverlayUrl || !liveMp4Url) return null;
+
+    const aspectRatio = frameMeta.canvasWidth / frameMeta.canvasHeight;
+
+    return (
+      <div className="relative w-full h-full flex items-center justify-center p-2">
+        <div 
+          className="relative w-full" 
+          style={{ aspectRatio: `${aspectRatio}`, maxHeight: '100%' }}
+        >
+          {/* Layer 1: Videos in slot positions */}
+          {frameMeta.photoSlots.map((slot, i) => (
+            <div
+              key={`slot-${i}`}
+              className="absolute overflow-hidden"
+              style={{
+                left: `${slot.left * 100}%`,
+                top: `${slot.top * 100}%`,
+                width: `${slot.width * 100}%`,
+                height: `${slot.height * 100}%`,
+                transform: slot.rotation ? `rotate(${slot.rotation}deg)` : undefined,
+                borderRadius: slot.borderRadius ? `${slot.borderRadius}px` : undefined,
+              }}
+            >
+              <video
+                src={liveMp4Url}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+                style={{
+                  transform: slot.isMirrored ? 'scaleX(-1)' : undefined,
+                }}
+              />
+            </div>
+          ))}
+
+          {/* Layer 2: Frame overlay PNG on top */}
+          <img
+            src={frameOverlayUrl}
+            alt="Frame overlay"
+            className="absolute inset-0 w-full h-full object-fill pointer-events-none"
+            style={{ zIndex: 10 }}
+          />
+        </div>
+      </div>
+    );
+  };
+
   // Render the preview content for the active tab
   const renderPreview = () => {
     if (activeTab === 'photo') {
@@ -229,19 +304,6 @@ function DownloadContent() {
     }
 
     if (activeTab === 'gif' && hasGif) {
-      // If MP4 available, show video
-      if (burstMp4Available && burstMp4Url) {
-        return (
-          <video
-            src={burstMp4Url}
-            autoPlay
-            loop
-            muted
-            playsInline
-            className="w-full h-full object-contain p-2"
-          />
-        );
-      }
       // Legacy GIF
       if (legacyGif) {
         return (
@@ -252,7 +314,7 @@ function DownloadContent() {
           />
         );
       }
-      // Fallback: PNG slideshow of raw photos
+      // Always show PNG slideshow of raw photos for GIF tab
       if (session && burstsCount > 0) {
         return (
           <img
@@ -266,7 +328,11 @@ function DownloadContent() {
     }
 
     if (activeTab === 'live' && hasLive) {
-      // If MP4 available, show video
+      // Try to render with frame overlay (like editor screen)
+      if (liveMp4Available && frameOverlayAvailable && frameMeta) {
+        return renderLivePhotoWithFrame();
+      }
+      // Fallback: show video without frame
       if (liveMp4Available && liveMp4Url) {
         return (
           <video
@@ -285,17 +351,6 @@ function DownloadContent() {
           <img
             src={legacyLive}
             alt="Mémoire Live Photo"
-            className="w-full h-full object-contain p-2"
-          />
-        );
-      }
-      // Fallback: PNG slideshow of live frames
-      if (session && livesCount > 0) {
-        return (
-          <img
-            key={liveFrameIndex}
-            src={getLiveFrameUrl(liveFrameIndex)}
-            alt={`Live frame ${liveFrameIndex + 1}`}
             className="w-full h-full object-contain p-2"
           />
         );
