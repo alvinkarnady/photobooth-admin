@@ -41,7 +41,7 @@ function DownloadContent() {
   const [isDownloading, setIsDownloading] = useState(false);
 
   // MP4 availability state
-  const [liveMp4Available, setLiveMp4Available] = useState<boolean | null>(null);
+  const liveMp4Available = livesCount > 0;
 
   // Frame metadata for live photo overlay
   const [frameMeta, setFrameMeta] = useState<FrameMeta | null>(null);
@@ -77,11 +77,7 @@ function DownloadContent() {
   useEffect(() => {
     if (!session) return;
 
-    if (livesCount > 0 && liveMp4Url) {
-      fetch(liveMp4Url, { method: 'HEAD' })
-        .then(res => setLiveMp4Available(res.ok))
-        .catch(() => setLiveMp4Available(false));
-    }
+    if (!session) return;
 
     // Check frame overlay
     if (frameOverlayUrl) {
@@ -174,23 +170,18 @@ function DownloadContent() {
           return;
         }
       } else if (activeTab === 'gif') {
-        // Download all burst frames as individual images
-        for (let i = 0; i < burstsCount; i++) {
-          const rawUrl = getBurstFrameUrl(i);
-          const response = await fetch(rawUrl);
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `Mémoire_GIF_${i + 1}_${new Date().getTime()}.png`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-          await new Promise(r => setTimeout(r, 400));
+        const burstUrl = session ? `${r2BaseUrl}/photos/${session}/burst.mp4` : null;
+        if (burstUrl) {
+          targetUrl = burstUrl;
+          ext = 'mp4';
+        } else if (legacyGif) {
+          targetUrl = legacyGif;
+          ext = 'gif';
+        } else {
+          alert('GIF tidak tersedia untuk sesi ini.');
+          setIsDownloading(false);
+          return;
         }
-        setIsDownloading(false);
-        return;
       } else {
         targetUrl = imageUrl;
         ext = 'png';

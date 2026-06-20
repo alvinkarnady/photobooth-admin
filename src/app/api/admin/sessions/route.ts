@@ -28,11 +28,12 @@ export async function GET() {
         if (!files || files.length === 0) return null;
         
         const photoFile = files.find(f => f.Key?.endsWith('photo.png'));
-        const burstFiles = files.filter(f => f.Key?.includes('burst_'));
-        const liveFiles = files.filter(f => f.Key?.includes('live_'));
+        const burstFiles = files.filter(f => f.Key?.includes('burst_') || f.Key?.endsWith('burst.mp4'));
+        const liveFiles = files.filter(f => f.Key?.includes('live_') || f.Key?.endsWith('live.mp4'));
         
         const totalSize = files.reduce((acc, f) => acc + (f.Size || 0), 0);
-        const createdAt = photoFile?.LastModified || files[0].LastModified;
+        // Ensure createdAt is valid even if photoFile is missing
+        const createdAt = photoFile?.LastModified || (files.length > 0 ? files[0].LastModified : new Date());
         const photoUrl = photoFile ? `${R2_PUBLIC_URL}/${photoFile.Key}` : null;
         
         return {
