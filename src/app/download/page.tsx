@@ -100,18 +100,6 @@ function DownloadContent() {
     }
   }, [session, livesCount, liveMp4Url, frameOverlayUrl, frameMetaUrl]);
 
-  // GIF slideshow: cycle through raw photos
-  useEffect(() => {
-    if (activeTab === 'gif' && burstsCount > 1) {
-      gifIntervalRef.current = setInterval(() => {
-        setGifFrameIndex(prev => (prev + 1) % burstsCount);
-      }, 1000);
-    }
-    return () => {
-      if (gifIntervalRef.current) clearInterval(gifIntervalRef.current);
-    };
-  }, [activeTab, burstsCount]);
-
   if (!isClient) return null;
 
   if (!imageUrl) {
@@ -227,58 +215,6 @@ function DownloadContent() {
     }
   };
 
-  // Render Live Photo with frame overlay (video + PNG overlay)
-  const renderLivePhotoWithFrame = () => {
-    if (!frameMeta || !frameOverlayUrl || !liveMp4Url) return null;
-
-    const aspectRatio = frameMeta.canvasWidth / frameMeta.canvasHeight;
-
-    return (
-      <div className="relative w-full h-full flex items-center justify-center p-2">
-        <div 
-          className="relative w-full" 
-          style={{ aspectRatio: `${aspectRatio}`, maxHeight: '100%' }}
-        >
-          {/* Layer 1: Videos in slot positions */}
-          {frameMeta.photoSlots.map((slot, i) => (
-            <div
-              key={`slot-${i}`}
-              className="absolute overflow-hidden"
-              style={{
-                left: `${slot.left * 100}%`,
-                top: `${slot.top * 100}%`,
-                width: `${slot.width * 100}%`,
-                height: `${slot.height * 100}%`,
-                transform: slot.rotation ? `rotate(${slot.rotation}deg)` : undefined,
-                borderRadius: slot.borderRadius ? `${slot.borderRadius}px` : undefined,
-              }}
-            >
-              <video
-                src={liveMp4Url}
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-                style={{
-                  transform: slot.isMirrored ? 'scaleX(-1)' : undefined,
-                }}
-              />
-            </div>
-          ))}
-
-          {/* Layer 2: Frame overlay PNG on top */}
-          <img
-            src={frameOverlayUrl}
-            alt="Frame overlay"
-            className="absolute inset-0 w-full h-full object-fill pointer-events-none"
-            style={{ zIndex: 10 }}
-          />
-        </div>
-      </div>
-    );
-  };
-
   // Render the preview content for the active tab
   const renderPreview = () => {
     if (activeTab === 'photo') {
@@ -305,24 +241,25 @@ function DownloadContent() {
           />
         );
       }
-      // Always show PNG slideshow of raw photos for GIF tab
       if (session && burstsCount > 0) {
-        return (
-          <img
-            key={gifFrameIndex}
-            src={getBurstFrameUrl(gifFrameIndex)}
-            alt={`Raw photo ${gifFrameIndex + 1}`}
-            className="w-full h-full object-contain p-2 transition-opacity duration-200"
-          />
-        );
+        const burstUrl = session ? `${r2BaseUrl}/photos/${session}/burst.mp4` : null;
+        if (burstUrl) {
+          return (
+            <video
+              src={burstUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-full object-contain p-2"
+            />
+          );
+        }
       }
     }
 
     if (activeTab === 'live' && hasLive) {
-      // Try to render with frame overlay (like editor screen)
-      if (liveMp4Available && frameOverlayAvailable && frameMeta) {
-        return renderLivePhotoWithFrame();
-      }
+
       // Fallback: show video without frame
       if (liveMp4Available && liveMp4Url) {
         return (
