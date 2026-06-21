@@ -9,7 +9,7 @@ function DownloadContent() {
 
   // New session-based params
   const session = searchParams.get('session');
-  const burstsCount = parseInt(searchParams.get('bursts') || '0');
+  const gifsCount = parseInt(searchParams.get('gifs') || '0');
   const livesCount = parseInt(searchParams.get('lives') || '0');
   const liveDelay = parseInt(searchParams.get('liveDelay') || '150');
 
@@ -23,7 +23,7 @@ function DownloadContent() {
   const [isDownloading, setIsDownloading] = useState(false);
 
   // MP4 availability state
-  const [burstMp4Available, setBurstMp4Available] = useState<boolean | null>(null);
+  const [gifMp4Available, setGifMp4Available] = useState<boolean | null>(null);
   const [liveMp4Available, setLiveMp4Available] = useState<boolean | null>(null);
 
   // Slideshow state for GIF (raw photos cycling)
@@ -48,21 +48,21 @@ function DownloadContent() {
     ? `${r2BaseUrl}/photos/${session}/photo.png`
     : legacyUrl;
 
-  const burstMp4Url = session ? `${r2BaseUrl}/photos/${session}/burst.mp4` : null;
+  const gifMp4Url = session ? `${r2BaseUrl}/photos/${session}/gif.mp4` : null;
   const liveMp4Url = session ? `${r2BaseUrl}/photos/${session}/live.mp4` : null;
 
-  const hasGif = session ? burstsCount > 0 : !!legacyGif;
+  const hasGif = session ? gifsCount > 0 : !!legacyGif;
   const hasLive = session ? livesCount > 0 : !!legacyLive;
-  const hasRaw = session ? burstsCount > 0 : false;
+  const hasRaw = session ? gifsCount > 0 : false;
 
   // Check if MP4 files exist on server
   useEffect(() => {
     if (!session) return;
 
-    if (burstsCount > 0 && burstMp4Url) {
-      fetch(burstMp4Url, { method: 'HEAD' })
-        .then(res => setBurstMp4Available(res.ok))
-        .catch(() => setBurstMp4Available(false));
+    if (gifsCount > 0 && gifMp4Url) {
+      fetch(gifMp4Url, { method: 'HEAD' })
+        .then(res => setGifMp4Available(res.ok))
+        .catch(() => setGifMp4Available(false));
     }
 
     if (livesCount > 0 && liveMp4Url) {
@@ -70,19 +70,19 @@ function DownloadContent() {
         .then(res => setLiveMp4Available(res.ok))
         .catch(() => setLiveMp4Available(false));
     }
-  }, [session, burstsCount, livesCount, burstMp4Url, liveMp4Url]);
+  }, [session, gifsCount, livesCount, gifMp4Url, liveMp4Url]);
 
   // GIF slideshow: cycle through raw photos at ~1 photo/sec
   useEffect(() => {
-    if (activeTab === 'gif' && burstsCount > 1 && !burstMp4Available) {
+    if (activeTab === 'gif' && gifsCount > 1 && !gifMp4Available) {
       gifIntervalRef.current = setInterval(() => {
-        setGifFrameIndex(prev => (prev + 1) % burstsCount);
+        setGifFrameIndex(prev => (prev + 1) % gifsCount);
       }, 1000); // 1 second per photo
     }
     return () => {
       if (gifIntervalRef.current) clearInterval(gifIntervalRef.current);
     };
-  }, [activeTab, burstsCount, burstMp4Available]);
+  }, [activeTab, gifsCount, gifMp4Available]);
 
   // Live Photo slideshow: cycle through live frames at liveDelay ms
   useEffect(() => {
@@ -107,7 +107,7 @@ function DownloadContent() {
   }
 
   // Build URLs for individual frames
-  const getBurstFrameUrl = (i: number) =>
+  const getGifFrameUrl = (i: number) =>
     `${r2BaseUrl}/photos/${session}/burst_${i}.png`;
   const getLiveFrameUrl = (i: number) =>
     `${r2BaseUrl}/photos/${session}/live_${i}.png`;
@@ -124,7 +124,7 @@ function DownloadContent() {
         }
         // Download selected raw photos
         for (const i of selectedRaws) {
-          const rawUrl = getBurstFrameUrl(i);
+          const rawUrl = getGifFrameUrl(i);
           const response = await fetch(rawUrl);
           const blob = await response.blob();
           const url = window.URL.createObjectURL(blob);
@@ -157,8 +157,8 @@ function DownloadContent() {
           ext = 'png';
         }
       } else if (activeTab === 'gif') {
-        if (burstMp4Available && burstMp4Url) {
-          targetUrl = burstMp4Url;
+        if (gifMp4Available && gifMp4Url) {
+          targetUrl = gifMp4Url;
           ext = 'mp4';
         } else if (legacyGif) {
           targetUrl = legacyGif;
@@ -230,10 +230,10 @@ function DownloadContent() {
 
     if (activeTab === 'gif' && hasGif) {
       // If MP4 available, show video
-      if (burstMp4Available && burstMp4Url) {
+      if (gifMp4Available && gifMp4Url) {
         return (
           <video
-            src={burstMp4Url}
+            src={gifMp4Url}
             autoPlay
             loop
             muted
@@ -253,11 +253,11 @@ function DownloadContent() {
         );
       }
       // Fallback: PNG slideshow of raw photos
-      if (session && burstsCount > 0) {
+      if (session && gifsCount > 0) {
         return (
           <img
             key={gifFrameIndex}
-            src={getBurstFrameUrl(gifFrameIndex)}
+            src={getGifFrameUrl(gifFrameIndex)}
             alt={`Raw photo ${gifFrameIndex + 1}`}
             className="w-full h-full object-contain p-2 transition-opacity duration-200"
           />
@@ -309,7 +309,7 @@ function DownloadContent() {
             <p className="text-xs text-secondary mb-2">Pilih foto yang ingin diunduh</p>
             <div className="flex justify-center gap-4">
               <button 
-                onClick={() => setSelectedRaws(Array.from({ length: burstsCount }, (_, i) => i))}
+                onClick={() => setSelectedRaws(Array.from({ length: gifsCount }, (_, i) => i))}
                 className="text-xs font-medium text-primary hover:underline"
               >
                 Pilih Semua
@@ -323,7 +323,7 @@ function DownloadContent() {
             </div>
           </div>
           <div className="flex-1 overflow-y-auto p-2 grid grid-cols-2 gap-2 custom-scrollbar">
-            {Array.from({ length: burstsCount }).map((_, i) => {
+            {Array.from({ length: gifsCount }).map((_, i) => {
               const isSelected = selectedRaws.includes(i);
               return (
                 <div 
@@ -338,7 +338,7 @@ function DownloadContent() {
                   }}
                 >
                   <img
-                    src={getBurstFrameUrl(i)}
+                    src={getGifFrameUrl(i)}
                     alt={`Raw ${i + 1}`}
                     className={`w-full aspect-[3/4] object-cover transition-all ${isSelected ? 'border-2 border-primary shadow-md' : 'border border-outline-variant/30 opacity-80 hover:opacity-100'}`}
                     loading="lazy"
