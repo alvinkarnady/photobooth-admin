@@ -1,8 +1,23 @@
 'use client';
 
-import { Suspense, useEffect, useState, useRef, useCallback } from 'react';
+import { Suspense, useEffect, useState, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Image from 'next/image';
+
+type AssetStatus = 'idle' | 'loading' | 'ready' | 'error';
+
+type CacheState = {
+  photoUrl?: string;
+  photoStatus: AssetStatus;
+  gifMp4Url?: string;
+  gifMp4Status: AssetStatus;
+  gifFrameUrls: string[];
+  gifFramesStatus: AssetStatus;
+  liveMp4Url?: string;
+  liveMp4Status: AssetStatus;
+  liveFrameUrls: string[];
+  liveFramesStatus: AssetStatus;
+};
 
 function DownloadContent() {
   const searchParams = useSearchParams();
@@ -22,9 +37,16 @@ function DownloadContent() {
   const [activeTab, setActiveTab] = useState<'photo' | 'gif' | 'live' | 'raw'>('photo');
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // MP4 availability state
-  const [gifMp4Available, setGifMp4Available] = useState<boolean | null>(null);
-  const [liveMp4Available, setLiveMp4Available] = useState<boolean | null>(null);
+  // Caching State
+  const [cache, setCache] = useState<CacheState>({
+    photoStatus: 'idle',
+    gifMp4Status: 'idle',
+    gifFramesStatus: 'idle',
+    liveMp4Status: 'idle',
+    liveFramesStatus: 'idle',
+    gifFrameUrls: [],
+    liveFrameUrls: []
+  });
 
   // Slideshow state for GIF (raw photos cycling)
   const [gifFrameIndex, setGifFrameIndex] = useState(0);
@@ -32,49 +54,102 @@ function DownloadContent() {
   // Slideshow state for Live Photo (live frames cycling)
   const [liveFrameIndex, setLiveFrameIndex] = useState(0);
 
-  // Selected raw photos
-  const [selectedRaws, setSelectedRaws] = useState<number[]>([]);
-
   const gifIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const liveIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const r2BaseUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || 'https://pub-39bcbb6191eb4a958c8210dc87371845.r2.dev';
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Construct photo URL from session — using Cloudflare R2
-  const r2BaseUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || 'https://pub-39bcbb6191eb4a958c8210dc87371845.r2.dev';
-  const imageUrl = session
-    ? `${r2BaseUrl}/photos/${session}/photo.png`
-    : legacyUrl;
+  // Eager prefetch and cache
+  useEffect(() => {
+    if (!session && !legacyUrl) return;
 
-  const gifMp4Url = session ? `${r2BaseUrl}/photos/${session}/gif.mp4` : null;
-  const liveMp4Url = session ? `${r2BaseUrl}/photos/${session}/live.mp4` : null;
+    let mounted = true;
+
+    const fetchAsObjectURL = async (url: string) => {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Not found: ${url}`);
+      const blob = await res.blob();
+      return window.URL.createObjectURL(blob);
+    };
+
+    const loadAll = async () => {
+      // Photo
+      if (session || legacyUrl) {
+        setCache(prev => ({ ...prev, photoStatus: 'loading' }));
+        try {
+          const url = session ? `${r2BaseUrl}/photos/${session}/photo.png` : legacyUrl!;
+          const objUrl = await fetchAsObjectURL(url);
+          if (mounted) setCache(prev => ({ ...prev, photoUrl: objUrl, photoStatus: 'ready' }));
+        } catch {
+          if (mounted) setCache(prev => ({ ...prev, photoStatus: 'error' }));
+        }
+      }
+
+      // GIF MP4 & Frames
+      if (session && gifsCount > 0) {
+        setCache(prev => ({ ...prev, gifMp4Status: 'loading' }));
+        try {
+          const objUrl = await fetchAsObjectURL(`${r2BaseUrl}/photos/${session}/gif.mp4`);
+          if (mounted) setCache(prev => ({ ...prev, gifMp4Url: objUrl, gifMp4Status: 'ready' }));
+        } catch {
+          if (mounted) setCache(prev => ({ ...prev, gifMp4Status: 'error' }));
+        }
+
+        // Always fetch raw frames for the Raw tab (and as fallback for GIF tab)
+        setCache(prev => ({ ...prev, gifFramesStatus: 'loading' }));
+        try {
+          const promises = Array.from({ length: gifsCount }).map((_, i) => 
+            fetchAsObjectURL(`${r2BaseUrl}/photos/${session}/burst_${i}.png`)
+          );
+          const urls = await Promise.all(promises);
+          if (mounted) setCache(prev => ({ ...prev, gifFrameUrls: urls, gifFramesStatus: 'ready' }));
+        } catch {
+          if (mounted) setCache(prev => ({ ...prev, gifFramesStatus: 'error' }));
+        }
+      }
+
+      // Live MP4 & Frames
+      if (session && livesCount > 0) {
+        setCache(prev => ({ ...prev, liveMp4Status: 'loading' }));
+        try {
+          const objUrl = await fetchAsObjectURL(`${r2BaseUrl}/photos/${session}/live.mp4`);
+          if (mounted) setCache(prev => ({ ...prev, liveMp4Url: objUrl, liveMp4Status: 'ready' }));
+        } catch {
+          if (mounted) setCache(prev => ({ ...prev, liveMp4Status: 'error' }));
+        }
+
+        // Always fetch live frames as fallback for Live Photo
+        setCache(prev => ({ ...prev, liveFramesStatus: 'loading' }));
+        try {
+          const promises = Array.from({ length: livesCount }).map((_, i) => 
+            fetchAsObjectURL(`${r2BaseUrl}/photos/${session}/live_${i}.png`)
+          );
+          const urls = await Promise.all(promises);
+          if (mounted) setCache(prev => ({ ...prev, liveFrameUrls: urls, liveFramesStatus: 'ready' }));
+        } catch {
+          if (mounted) setCache(prev => ({ ...prev, liveFramesStatus: 'error' }));
+        }
+      }
+    };
+
+    loadAll();
+
+    return () => {
+      mounted = false;
+    };
+  }, [session, legacyUrl, gifsCount, livesCount, r2BaseUrl]);
 
   const hasGif = session ? gifsCount > 0 : !!legacyGif;
   const hasLive = session ? livesCount > 0 : !!legacyLive;
   const hasRaw = session ? gifsCount > 0 : false;
 
-  // Check if MP4 files exist on server
-  useEffect(() => {
-    if (!session) return;
-
-    if (gifsCount > 0 && gifMp4Url) {
-      fetch(gifMp4Url, { method: 'HEAD' })
-        .then(res => setGifMp4Available(res.ok))
-        .catch(() => setGifMp4Available(false));
-    }
-
-    if (livesCount > 0 && liveMp4Url) {
-      fetch(liveMp4Url, { method: 'HEAD' })
-        .then(res => setLiveMp4Available(res.ok))
-        .catch(() => setLiveMp4Available(false));
-    }
-  }, [session, gifsCount, livesCount, gifMp4Url, liveMp4Url]);
-
   // GIF slideshow: cycle through raw photos at ~1 photo/sec
   useEffect(() => {
-    if (activeTab === 'gif' && gifsCount > 1 && !gifMp4Available) {
+    if (activeTab === 'gif' && gifsCount > 1 && cache.gifMp4Status !== 'ready') {
       gifIntervalRef.current = setInterval(() => {
         setGifFrameIndex(prev => (prev + 1) % gifsCount);
       }, 1000); // 1 second per photo
@@ -82,11 +157,11 @@ function DownloadContent() {
     return () => {
       if (gifIntervalRef.current) clearInterval(gifIntervalRef.current);
     };
-  }, [activeTab, gifsCount, gifMp4Available]);
+  }, [activeTab, gifsCount, cache.gifMp4Status]);
 
   // Live Photo slideshow: cycle through live frames at liveDelay ms
   useEffect(() => {
-    if (activeTab === 'live' && livesCount > 1 && !liveMp4Available) {
+    if (activeTab === 'live' && livesCount > 1 && cache.liveMp4Status !== 'ready') {
       liveIntervalRef.current = setInterval(() => {
         setLiveFrameIndex(prev => (prev + 1) % livesCount);
       }, liveDelay);
@@ -94,11 +169,11 @@ function DownloadContent() {
     return () => {
       if (liveIntervalRef.current) clearInterval(liveIntervalRef.current);
     };
-  }, [activeTab, livesCount, liveDelay, liveMp4Available]);
+  }, [activeTab, livesCount, liveDelay, cache.liveMp4Status]);
 
   if (!isClient) return null;
 
-  if (!imageUrl) {
+  if (!session && !legacyUrl) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center text-slate-800 p-6">
         <p className="text-slate-500 font-medium">Tidak ada foto yang ditemukan.</p>
@@ -106,37 +181,42 @@ function DownloadContent() {
     );
   }
 
-  // Build URLs for individual frames
-  const getGifFrameUrl = (i: number) =>
-    `${r2BaseUrl}/photos/${session}/burst_${i}.png`;
-  const getLiveFrameUrl = (i: number) =>
-    `${r2BaseUrl}/photos/${session}/live_${i}.png`;
-
   const handleDownload = async () => {
     try {
       setIsDownloading(true);
 
       if (activeTab === 'raw') {
-        if (selectedRaws.length === 0) {
-          alert('Pilih setidaknya satu foto raw untuk diunduh.');
+        if (cache.gifFramesStatus !== 'ready' || cache.gifFrameUrls.length === 0) {
+          alert('Foto raw belum siap. Tunggu sebentar.');
           setIsDownloading(false);
           return;
         }
-        // Download selected raw photos
-        for (const i of selectedRaws) {
-          const rawUrl = getGifFrameUrl(i);
-          const response = await fetch(rawUrl);
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `Mémoire_Raw_${i + 1}_${new Date().getTime()}.png`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-          await new Promise(r => setTimeout(r, 400));
-        }
+
+        // Dynamically import jszip to keep initial bundle size small
+        const JSZip = (await import('jszip')).default;
+        const zip = new JSZip();
+
+        // Fetch blobs from the pre-cached Object URLs
+        const fetchPromises = cache.gifFrameUrls.map(async (url, i) => {
+          const res = await fetch(url);
+          const blob = await res.blob();
+          zip.file(`Mémoire_Raw_${i + 1}.png`, blob);
+        });
+
+        await Promise.all(fetchPromises);
+
+        const content = await zip.generateAsync({ type: 'blob' });
+        const zipUrl = window.URL.createObjectURL(content);
+
+        const a = document.createElement('a');
+        a.href = zipUrl;
+        a.download = `Mémoire_Raw_${new Date().getTime()}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(zipUrl);
+        document.body.removeChild(a);
+
+        setIsDownloading(false);
         return;
       }
 
@@ -144,21 +224,19 @@ function DownloadContent() {
       let ext = 'png';
 
       if (activeTab === 'live') {
-        if (liveMp4Available && liveMp4Url) {
-          targetUrl = liveMp4Url;
+        if (cache.liveMp4Status === 'ready' && cache.liveMp4Url) {
+          targetUrl = cache.liveMp4Url;
           ext = 'mp4';
         } else if (legacyLive) {
           targetUrl = legacyLive;
           ext = 'gif';
-        } else {
-          // Fallback: download individual live frames as zip would be complex,
-          // so download the current visible frame
-          targetUrl = getLiveFrameUrl(liveFrameIndex);
+        } else if (cache.liveFramesStatus === 'ready' && cache.liveFrameUrls.length > 0) {
+          targetUrl = cache.liveFrameUrls[liveFrameIndex];
           ext = 'png';
         }
       } else if (activeTab === 'gif') {
-        if (gifMp4Available && gifMp4Url) {
-          targetUrl = gifMp4Url;
+        if (cache.gifMp4Status === 'ready' && cache.gifMp4Url) {
+          targetUrl = cache.gifMp4Url;
           ext = 'mp4';
         } else if (legacyGif) {
           targetUrl = legacyGif;
@@ -169,24 +247,23 @@ function DownloadContent() {
           return;
         }
       } else {
-        targetUrl = imageUrl;
-        ext = 'png';
+        if (cache.photoStatus === 'ready' && cache.photoUrl) {
+          targetUrl = cache.photoUrl;
+          ext = 'png';
+        }
       }
 
       if (!targetUrl) {
         alert('File belum siap. Tunggu sebentar.');
+        setIsDownloading(false);
         return;
       }
 
-      const response = await fetch(targetUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
+      a.href = targetUrl;
       a.download = `Mémoire_${new Date().getTime()}.${ext}`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
       console.error('Download failed:', error);
@@ -198,14 +275,17 @@ function DownloadContent() {
 
   const handleShare = async () => {
     try {
+      const shareUrl = session ? `${r2BaseUrl}/photos/${session}/photo.png` : legacyUrl;
+      if (!shareUrl) return;
+
       if (navigator.share) {
         await navigator.share({
           title: 'Mémoire',
           text: 'Lihat foto saya dari Mémoire!',
-          url: imageUrl,
+          url: shareUrl,
         });
       } else {
-        if (imageUrl) await navigator.clipboard.writeText(imageUrl);
+        await navigator.clipboard.writeText(shareUrl);
         alert('Tautan berhasil disalin ke clipboard!');
       }
     } catch (error) {
@@ -213,27 +293,47 @@ function DownloadContent() {
     }
   };
 
+  const renderLoading = () => (
+    <div className="w-full h-full flex flex-col items-center justify-center bg-surface-container-lowest gap-3">
+      <svg className="animate-spin h-8 w-8 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"></circle>
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <p className="font-label-sm text-label-sm text-secondary uppercase tracking-widest animate-pulse">Loading Assets...</p>
+    </div>
+  );
+
+  const renderNotAvailable = () => (
+    <div className="w-full h-full flex items-center justify-center bg-surface-container-lowest">
+      <p className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Not Available</p>
+    </div>
+  );
+
   // Render the preview content for the active tab
   const renderPreview = () => {
     if (activeTab === 'photo') {
-      return (
-        <Image
-          src={imageUrl}
-          alt="Mémoire Result"
-          fill
-          sizes="100vw"
-          className="object-contain p-2"
-          priority
-        />
-      );
+      if (cache.photoStatus === 'loading') return renderLoading();
+      if (cache.photoStatus === 'ready' && cache.photoUrl) {
+        return (
+          <Image
+            src={cache.photoUrl}
+            alt="Mémoire Result"
+            fill
+            sizes="100vw"
+            className="object-contain p-2"
+            priority
+          />
+        );
+      }
+      return renderNotAvailable();
     }
 
     if (activeTab === 'gif' && hasGif) {
-      // If MP4 available, show video
-      if (gifMp4Available && gifMp4Url) {
+      if (cache.gifMp4Status === 'loading' && !legacyGif) return renderLoading();
+      if (cache.gifMp4Status === 'ready' && cache.gifMp4Url) {
         return (
           <video
-            src={gifMp4Url}
+            src={cache.gifMp4Url}
             autoPlay
             loop
             muted
@@ -242,7 +342,6 @@ function DownloadContent() {
           />
         );
       }
-      // Legacy GIF
       if (legacyGif) {
         return (
           <img
@@ -252,25 +351,30 @@ function DownloadContent() {
           />
         );
       }
+      
       // Fallback: PNG slideshow of raw photos
       if (session && gifsCount > 0) {
-        return (
-          <img
-            key={gifFrameIndex}
-            src={getGifFrameUrl(gifFrameIndex)}
-            alt={`Raw photo ${gifFrameIndex + 1}`}
-            className="w-full h-full object-contain p-2 transition-opacity duration-200"
-          />
-        );
+        if (cache.gifFramesStatus === 'loading') return renderLoading();
+        if (cache.gifFramesStatus === 'ready' && cache.gifFrameUrls.length > 0) {
+          return (
+            <img
+              key={gifFrameIndex}
+              src={cache.gifFrameUrls[gifFrameIndex]}
+              alt={`Raw photo ${gifFrameIndex + 1}`}
+              className="w-full h-full object-contain p-2 transition-opacity duration-200"
+            />
+          );
+        }
       }
+      return renderNotAvailable();
     }
 
     if (activeTab === 'live' && hasLive) {
-      // If MP4 available, show video
-      if (liveMp4Available && liveMp4Url) {
+      if (cache.liveMp4Status === 'loading' && !legacyLive) return renderLoading();
+      if (cache.liveMp4Status === 'ready' && cache.liveMp4Url) {
         return (
           <video
-            src={liveMp4Url}
+            src={cache.liveMp4Url}
             autoPlay
             loop
             muted
@@ -279,7 +383,6 @@ function DownloadContent() {
           />
         );
       }
-      // Legacy GIF
       if (legacyLive) {
         return (
           <img
@@ -289,76 +392,48 @@ function DownloadContent() {
           />
         );
       }
+      
       // Fallback: PNG slideshow of live frames
       if (session && livesCount > 0) {
-        return (
-          <img
-            key={liveFrameIndex}
-            src={getLiveFrameUrl(liveFrameIndex)}
-            alt={`Live frame ${liveFrameIndex + 1}`}
-            className="w-full h-full object-contain p-2"
-          />
-        );
+        if (cache.liveFramesStatus === 'loading') return renderLoading();
+        if (cache.liveFramesStatus === 'ready' && cache.liveFrameUrls.length > 0) {
+          return (
+            <img
+              key={liveFrameIndex}
+              src={cache.liveFrameUrls[liveFrameIndex]}
+              alt={`Live frame ${liveFrameIndex + 1}`}
+              className="w-full h-full object-contain p-2"
+            />
+          );
+        }
       }
+      return renderNotAvailable();
     }
 
     if (activeTab === 'raw' && hasRaw) {
-      return (
-        <div className="absolute inset-0 flex flex-col bg-surface">
-          <div className="p-3 text-center border-b border-outline-variant/30">
-            <p className="text-xs text-secondary mb-2">Pilih foto yang ingin diunduh</p>
-            <div className="flex justify-center gap-4">
-              <button 
-                onClick={() => setSelectedRaws(Array.from({ length: gifsCount }, (_, i) => i))}
-                className="text-xs font-medium text-primary hover:underline"
-              >
-                Pilih Semua
-              </button>
-              <button 
-                onClick={() => setSelectedRaws([])}
-                className="text-xs font-medium text-secondary hover:underline"
-              >
-                Batal Pilih
-              </button>
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto p-2 grid grid-cols-2 gap-2 custom-scrollbar">
-            {Array.from({ length: gifsCount }).map((_, i) => {
-              const isSelected = selectedRaws.includes(i);
-              return (
-                <div 
-                  key={i} 
-                  className="relative cursor-pointer group"
-                  onClick={() => {
-                    if (isSelected) {
-                      setSelectedRaws(prev => prev.filter(id => id !== i));
-                    } else {
-                      setSelectedRaws(prev => [...prev, i]);
-                    }
-                  }}
-                >
+      if (cache.gifFramesStatus === 'loading') return renderLoading();
+      if (cache.gifFramesStatus === 'ready' && cache.gifFrameUrls.length > 0) {
+        return (
+          <div className="absolute inset-0 flex flex-col bg-surface">
+            <div className="flex-1 overflow-y-auto p-2 grid grid-cols-2 gap-2 custom-scrollbar">
+              {cache.gifFrameUrls.map((url, i) => (
+                <div key={i} className="relative">
                   <img
-                    src={getGifFrameUrl(i)}
+                    src={url}
                     alt={`Raw ${i + 1}`}
-                    className={`w-full aspect-[3/4] object-cover transition-all ${isSelected ? 'border-2 border-primary shadow-md' : 'border border-outline-variant/30 opacity-80 hover:opacity-100'}`}
+                    className="w-full aspect-[3/4] object-cover border border-outline-variant/30"
                     loading="lazy"
                   />
-                  <div className={`absolute top-2 right-2 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-primary border-primary text-on-primary' : 'bg-surface/50 border-outline text-transparent'}`}>
-                    <span className="material-symbols-outlined text-[14px]">check</span>
-                  </div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        </div>
-      );
+        );
+      }
+      return renderNotAvailable();
     }
 
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-surface-container-lowest">
-        <p className="font-label-sm text-label-sm text-secondary uppercase tracking-widest">Not Available</p>
-      </div>
-    );
+    return renderNotAvailable();
   };
 
   return (
@@ -437,7 +512,11 @@ function DownloadContent() {
         <div className="w-full flex flex-col sm:flex-row gap-4 mb-8">
           <button
             onClick={handleDownload}
-            disabled={isDownloading || (activeTab === 'raw' && selectedRaws.length === 0)}
+            disabled={isDownloading || 
+                     (activeTab === 'raw' && cache.gifFramesStatus !== 'ready') ||
+                     (activeTab === 'photo' && cache.photoStatus !== 'ready') ||
+                     (activeTab === 'gif' && cache.gifMp4Status !== 'ready' && cache.gifFramesStatus !== 'ready' && !legacyGif) ||
+                     (activeTab === 'live' && cache.liveMp4Status !== 'ready' && cache.liveFramesStatus !== 'ready' && !legacyLive)}
             className="flex-1 py-4 px-6 bg-primary text-on-primary font-label-lg text-label-lg uppercase tracking-widest rounded-none hover:opacity-90 transition-opacity flex items-center justify-center gap-3 disabled:opacity-50"
           >
             {isDownloading ? (
@@ -451,7 +530,7 @@ function DownloadContent() {
             {isDownloading 
               ? 'Saving...' 
               : activeTab === 'raw'
-                ? (selectedRaws.length > 0 ? `Save ${selectedRaws.length} Photos` : 'Select Photos')
+                ? 'Save All Raw Photos (ZIP)'
                 : `Save ${activeTab === 'live' ? 'Live Photo' : activeTab === 'gif' ? 'GIF' : 'Photo'}`}
           </button>
 
