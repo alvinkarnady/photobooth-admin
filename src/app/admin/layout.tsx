@@ -17,7 +17,6 @@ import {
   ChevronDown,
   Palette,
 } from "lucide-react";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
 
 export default function AdminLayout({
   children,
@@ -31,35 +30,28 @@ export default function AdminLayout({
   const [isCmsOpen, setIsCmsOpen] = useState(false);
 
   useEffect(() => {
-    const supabase = getSupabaseBrowserClient();
-
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session && pathname !== "/admin/login") {
-        router.push("/admin/login");
-      } else if (session) {
+      try {
+        const res = await fetch("/api/admin/me");
+        if (!res.ok) {
+          if (pathname !== "/admin/login") router.push("/admin/login");
+          setIsAuthenticated(false);
+          return;
+        }
+        const data = await res.json();
         setIsAuthenticated(true);
-        setAdminEmail(session.user.email || "Admin");
-      }
-    };
-
-    checkSession();
-
-    // Listen for auth state changes (login/logout from other tabs, token refresh, etc.)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session && pathname !== "/admin/login") {
+        setAdminEmail(data.email || "Admin");
+      } catch {
+        if (pathname !== "/admin/login") router.push("/admin/login");
         setIsAuthenticated(false);
-        router.push("/admin/login");
-      } else if (session) {
-        setIsAuthenticated(true);
-        setAdminEmail(session.user.email || "Admin");
       }
-    });
-
-    return () => {
-      subscription.unsubscribe();
     };
+
+    if (pathname !== "/admin/login") {
+      checkSession();
+    } else {
+      setIsAuthenticated(false);
+    }
   }, [pathname, router]);
 
   if (pathname === "/admin/login") {
@@ -75,8 +67,7 @@ export default function AdminLayout({
   }
 
   const handleLogout = async () => {
-    const supabase = getSupabaseBrowserClient();
-    await supabase.auth.signOut();
+    await fetch("/api/admin/logout", { method: "POST" });
     router.push("/admin/login");
   };
 
@@ -104,10 +95,10 @@ export default function AdminLayout({
       {/* Sidebar */}
       <aside className="w-64 bg-surface-container-lowest border-r border-outline-variant flex flex-col hidden md:flex">
         <div className="p-6 border-b border-outline-variant flex items-center h-[72px]">
-          <img 
-            src="/images/memoire-logo.png" 
-            alt="Mémoire Logo" 
-            className="h-8 w-auto object-contain mix-blend-multiply opacity-90" 
+          <img
+            src="/images/memoire-logo.png"
+            alt="Mémoire Logo"
+            className="h-8 w-auto object-contain mix-blend-multiply opacity-90"
           />
         </div>
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
@@ -119,10 +110,11 @@ export default function AdminLayout({
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex items-center gap-3 px-4 py-3 rounded-none transition-colors ${isActive
+                className={`flex items-center gap-3 px-4 py-3 rounded-none transition-colors ${
+                  isActive
                     ? "bg-surface-variant text-primary font-medium border-r-2 border-primary"
                     : "text-secondary hover:bg-surface-variant/50 hover:text-primary"
-                  }`}
+                }`}
               >
                 <item.icon className="w-5 h-5" />
                 {item.name}
@@ -140,7 +132,9 @@ export default function AdminLayout({
                 <LayoutDashboard className="w-5 h-5" />
                 CMS Marketing
               </div>
-              <ChevronDown className={`w-4 h-4 transition-transform ${isCmsOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${isCmsOpen ? "rotate-180" : ""}`}
+              />
             </button>
             {isCmsOpen && (
               <div className="mt-2 ml-4 pl-4 border-l border-outline-variant space-y-1">
@@ -150,10 +144,11 @@ export default function AdminLayout({
                     <Link
                       key={item.name}
                       href={item.href}
-                      className={`block px-4 py-2 rounded-none text-sm transition-colors ${isActive
+                      className={`block px-4 py-2 rounded-none text-sm transition-colors ${
+                        isActive
                           ? "text-primary font-medium border-l-2 border-primary pl-3"
                           : "text-secondary hover:text-primary border-l-2 border-transparent pl-3"
-                        }`}
+                      }`}
                     >
                       {item.name}
                     </Link>
@@ -192,7 +187,10 @@ export default function AdminLayout({
           <h2 className="text-xl font-display-md text-primary tracking-tight">
             Admin Panel
           </h2>
-          <button onClick={handleLogout} className="ml-auto text-secondary hover:text-primary">
+          <button
+            onClick={handleLogout}
+            className="ml-auto text-secondary hover:text-primary"
+          >
             <LogOut className="w-5 h-5" />
           </button>
         </header>
