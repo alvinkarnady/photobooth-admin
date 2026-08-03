@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import { cookies } from "next/headers";
 
 const COOKIE_NAME = "pb_admin_session";
 
@@ -43,6 +44,12 @@ export function getAdminCredentials() {
     email: process.env.ADMIN_EMAIL || "",
     password: process.env.ADMIN_PASSWORD || "",
   };
+}
+
+export async function requireAdmin() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  return verifyAdminSessionToken(token);
 }
 
 export { COOKIE_NAME };

@@ -1,8 +1,4 @@
-import { S3Client } from '@aws-sdk/client-s3';
-
-// Access Key ID : bac053d672c1ea02eb8675e4957e365d
-// Secret Access Key : 12d428bdfb47e6ac86141eb7c9932887f198443684b2a78a654bd95343243f0e
-// Endpoint: https://6887cbc03fa3869744098f1402cfce98.r2.cloudflarestorage.com
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 
 const accountId = '6887cbc03fa3869744098f1402cfce98';
 const accessKeyId = process.env.R2_ACCESS_KEY_ID || 'bac053d672c1ea02eb8675e4957e365d';
@@ -19,3 +15,37 @@ export const r2Client = new S3Client({
 
 export const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME || 'photobooth-media';
 export const R2_PUBLIC_URL = process.env.NEXT_PUBLIC_R2_PUBLIC_URL || 'https://pub-39bcbb6191eb4a958c8210dc87371845.r2.dev';
+
+export function frameAssetKey(id: string) {
+  return `frame_assets/overlay_${id}.png`;
+}
+
+export function frameAssetPublicUrl(id: string) {
+  return `${R2_PUBLIC_URL}/${frameAssetKey(id)}`;
+}
+
+export async function uploadFrameAsset(
+  id: string,
+  body: Buffer,
+  contentType = 'image/png',
+) {
+  const key = frameAssetKey(id);
+  await r2Client.send(
+    new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    }),
+  );
+  return `${frameAssetPublicUrl(id)}?v=${Date.now()}`;
+}
+
+export async function deleteFrameAsset(id: string) {
+  await r2Client.send(
+    new DeleteObjectCommand({
+      Bucket: R2_BUCKET_NAME,
+      Key: frameAssetKey(id),
+    }),
+  );
+}

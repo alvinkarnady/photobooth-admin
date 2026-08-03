@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import { Loader2, Plus, Save, Trash2, Image as ImageIcon, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -33,11 +32,17 @@ export default function CreateFramePage() {
 
   useEffect(() => {
     const fetchCategories = async () => {
-      const { data } = await supabase.from('paper_categories').select('name, is_active').order('name');
-      if (data && data.length > 0) {
-        setCategories(data);
-        const activeFirst = data.find(d => d.is_active);
-        if (activeFirst) setPaperCategory(activeFirst.name);
+      try {
+        const res = await fetch('/api/admin/categories');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data && data.length > 0) {
+          setCategories(data);
+          const activeFirst = data.find((d: { is_active: boolean }) => d.is_active);
+          if (activeFirst) setPaperCategory(activeFirst.name);
+        }
+      } catch (e) {
+        console.error('Fetch categories error:', e);
       }
     };
     fetchCategories();
@@ -130,44 +135,40 @@ export default function CreateFramePage() {
     setIsSaving(true);
     try {
       const id = uuidv4();
-      const fileName = `overlay_${id}.png`;
+      const formData = new FormData();
+      formData.append('id', id);
+      formData.append('name', name);
+      formData.append('paper_size_category', paperCategory);
+      formData.append('primary_color', String(4293361251));
+      formData.append('background_color', String(4294765804));
+      formData.append('canvas_width', String(imageSize.width));
+      formData.append('canvas_height', String(imageSize.height));
+      formData.append(
+        'photo_slots',
+        JSON.stringify(
+          slots.map((s, idx) => ({
+            left: s.left,
+            top: s.top,
+            width: s.width,
+            height: s.height,
+            rotation: 0,
+            borderRadius: 8,
+            liveDuration: liveDuration,
+            cameraShotIndex: s.cameraShotIndex ?? idx,
+            isMirrored: s.isMirrored ?? false,
+          })),
+        ),
+      );
+      formData.append('file', file);
 
-      // 1. Upload to Storage
-      const { error: uploadError } = await supabase.storage
-        .from('frame_assets')
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: publicUrlData } = supabase.storage
-        .from('frame_assets')
-        .getPublicUrl(fileName);
-
-      // 2. Insert to DB
-      const { error: dbError } = await supabase.from('frames').insert({
-        id,
-        name,
-        layout: 'custom',
-        paper_size_category: paperCategory,
-        overlay_image_path: publicUrlData.publicUrl,
-        primary_color: 4293361251, // Default Pink Hex
-        background_color: 4294765804, 
-        canvas_width: imageSize.width,
-        canvas_height: imageSize.height,
-        photo_slots: slots.map((s, idx) => ({
-          left: s.left,
-          top: s.top,
-          width: s.width,
-          height: s.height,
-          rotation: 0,
-          borderRadius: 8,
-          liveDuration: liveDuration,
-          cameraShotIndex: s.cameraShotIndex ?? idx,
-          isMirrored: s.isMirrored ?? false,
-        }))
+      const res = await fetch('/api/admin/frames', {
+        method: 'POST',
+        body: formData,
       });
-
-      if (dbError) throw dbError;
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Create failed');
+      }
 
       alert('Frame berhasil dibuat!');
       router.push('/admin/frames');

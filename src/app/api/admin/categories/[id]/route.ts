@@ -1,13 +1,6 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { query } from "@/lib/db";
-import { COOKIE_NAME, verifyAdminSessionToken } from "@/lib/admin-auth";
-
-async function requireAdmin() {
-  const cookieStore = await cookies();
-  const token = cookieStore.get(COOKIE_NAME)?.value;
-  return verifyAdminSessionToken(token);
-}
+import { requireAdmin } from "@/lib/admin-auth";
 
 export async function PATCH(
   req: Request,

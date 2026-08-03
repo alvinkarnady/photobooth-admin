@@ -2,7 +2,6 @@
 
 import { useState, useRef, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 import { Loader2, Plus, Save, Trash2, Image as ImageIcon, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -46,47 +45,53 @@ export default function EditFramePage(props: { params: Promise<{ id: string }> }
 
   useEffect(() => {
     const fetchFrame = async () => {
-      const { data, error } = await supabase
-        .from('frames')
-        .select('*')
-        .eq('id', frameId)
-        .single();
-        
-      if (error || !data) {
+      try {
+        const [frameRes, catRes] = await Promise.all([
+          fetch(`/api/admin/frames/${frameId}`),
+          fetch('/api/admin/categories'),
+        ]);
+
+        if (!frameRes.ok) {
+          alert('Frame tidak ditemukan');
+          router.push('/admin/frames');
+          return;
+        }
+
+        const data = await frameRes.json();
+        setName(data.name);
+        setPreviewUrl(data.overlay_image_path);
+        setImageSize({ width: data.canvas_width || 0, height: data.canvas_height || 0 });
+        if (data.paper_size_category) {
+          setPaperCategory(data.paper_size_category);
+        }
+
+        if (catRes.ok) {
+          const catData = await catRes.json();
+          if (catData) setCategories(catData);
+        }
+
+        if (data.photo_slots) {
+          const loadedSlots = data.photo_slots.map((s: any) => ({
+            id: uuidv4(),
+            left: s.left,
+            top: s.top,
+            width: s.width,
+            height: s.height,
+            cameraShotIndex: s.cameraShotIndex,
+            isMirrored: s.isMirrored,
+          }));
+          setSlots(loadedSlots);
+
+          if (data.photo_slots.length > 0 && data.photo_slots[0].liveDuration) {
+            setLiveDuration(data.photo_slots[0].liveDuration);
+          }
+        }
+        setIsLoading(false);
+      } catch (e) {
+        console.error('Fetch frame error:', e);
         alert('Frame tidak ditemukan');
         router.push('/admin/frames');
-        return;
       }
-
-      setName(data.name);
-      setPreviewUrl(data.overlay_image_path);
-      setImageSize({ width: data.canvas_width || 0, height: data.canvas_height || 0 });
-      if (data.paper_size_category) {
-        setPaperCategory(data.paper_size_category);
-      }
-
-      // Fetch categories
-      const { data: catData } = await supabase.from('paper_categories').select('name, is_active').order('name');
-      if (catData) setCategories(catData);
-      
-      if (data.photo_slots) {
-        const loadedSlots = data.photo_slots.map((s: any) => ({
-          id: uuidv4(),
-          left: s.left,
-          top: s.top,
-          width: s.width,
-          height: s.height,
-          cameraShotIndex: s.cameraShotIndex,
-          isMirrored: s.isMirrored,
-        }));
-        setSlots(loadedSlots);
-        
-        // Load liveDuration from the first slot if available
-        if (data.photo_slots.length > 0 && data.photo_slots[0].liveDuration) {
-          setLiveDuration(data.photo_slots[0].liveDuration);
-        }
-      }
-      setIsLoading(false);
     };
 
     fetchFrame();
@@ -167,45 +172,39 @@ export default function EditFramePage(props: { params: Promise<{ id: string }> }
 
     setIsSaving(true);
     try {
-      let publicUrl = previewUrl;
-
-      // If a new file was uploaded, upload it to storage
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('paper_size_category', paperCategory);
+      formData.append('canvas_width', String(imageSize.width));
+      formData.append('canvas_height', String(imageSize.height));
+      formData.append(
+        'photo_slots',
+        JSON.stringify(
+          slots.map((s, idx) => ({
+            left: s.left,
+            top: s.top,
+            width: s.width,
+            height: s.height,
+            rotation: 0,
+            borderRadius: 8,
+            liveDuration: liveDuration,
+            cameraShotIndex: s.cameraShotIndex ?? idx,
+            isMirrored: s.isMirrored ?? false,
+          })),
+        ),
+      );
       if (file) {
-        const fileName = `overlay_${frameId}.png`;
-        const { error: uploadError } = await supabase.storage
-          .from('frame_assets')
-          .upload(fileName, file, { upsert: true });
-
-        if (uploadError) throw uploadError;
-
-        const { data: publicUrlData } = supabase.storage
-          .from('frame_assets')
-          .getPublicUrl(fileName);
-          
-        publicUrl = publicUrlData.publicUrl;
+        formData.append('file', file);
       }
 
-      // Update DB
-      const { error: dbError } = await supabase.from('frames').update({
-        name,
-        paper_size_category: paperCategory,
-        overlay_image_path: publicUrl,
-        canvas_width: imageSize.width,
-        canvas_height: imageSize.height,
-        photo_slots: slots.map((s, idx) => ({
-          left: s.left,
-          top: s.top,
-          width: s.width,
-          height: s.height,
-          rotation: 0,
-          borderRadius: 8,
-          liveDuration: liveDuration,
-          cameraShotIndex: s.cameraShotIndex ?? idx,
-          isMirrored: s.isMirrored ?? false,
-        }))
-      }).eq('id', frameId);
-
-      if (dbError) throw dbError;
+      const res = await fetch(`/api/admin/frames/${frameId}`, {
+        method: 'PATCH',
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || 'Update failed');
+      }
 
       alert('Frame berhasil diperbarui!');
       router.push('/admin/frames');

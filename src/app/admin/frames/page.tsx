@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { supabase } from '@/lib/supabase';
 import { Loader2, Trash2, Plus, RefreshCw, Edit2, GripVertical, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
@@ -31,19 +30,17 @@ export default function FramesPage() {
 
   const fetchFrames = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('frames')
-      .select('*')
-      .order('sort_order', { ascending: true })
-      .order('created_at', { ascending: false });
-
-    if (error) {
+    try {
+      const res = await fetch('/api/admin/frames');
+      if (!res.ok) throw new Error('Failed to fetch');
+      const data = await res.json();
+      setFrames(data || []);
+    } catch (error) {
       console.error('Error fetching frames:', error);
       alert('Gagal mengambil data frame');
-    } else {
-      setFrames(data || []);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -55,9 +52,8 @@ export default function FramesPage() {
 
     setDeletingId(frame.id);
     try {
-      const fileName = `overlay_${frame.id}.png`;
-      await supabase.storage.from('frame_assets').remove([fileName]);
-      await supabase.from('frames').delete().eq('id', frame.id);
+      const res = await fetch(`/api/admin/frames/${frame.id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Delete failed');
       setFrames(frames.filter(f => f.id !== frame.id));
     } catch (error) {
       console.error('Error deleting frame:', error);
@@ -70,11 +66,12 @@ export default function FramesPage() {
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
       setFrames(frames.map(f => f.id === id ? { ...f, is_active: !currentStatus } : f));
-      const { error } = await supabase
-        .from('frames')
-        .update({ is_active: !currentStatus })
-        .eq('id', id);
-      if (error) throw error;
+      const res = await fetch(`/api/admin/frames/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !currentStatus }),
+      });
+      if (!res.ok) throw new Error('Toggle failed');
     } catch (error) {
       console.error('Error toggling frame:', error);
       fetchFrames();
@@ -85,11 +82,12 @@ export default function FramesPage() {
 
   const saveSortOrder = useCallback(async (reorderedFrames: Frame[]) => {
     try {
-      await Promise.all(
-        reorderedFrames.map((f, i) =>
-          supabase.from('frames').update({ sort_order: i }).eq('id', f.id)
-        )
-      );
+      const res = await fetch('/api/admin/frames/reorder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ orderedIds: reorderedFrames.map(f => f.id) }),
+      });
+      if (!res.ok) throw new Error('Reorder failed');
     } catch (e) {
       console.error('Save sort order error', e);
     }
