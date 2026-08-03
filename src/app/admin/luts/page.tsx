@@ -171,50 +171,66 @@ export default function LutManagerPage() {
             Belum ada LUT yang diunggah. Tambahkan satu di atas!
           </div>
         ) : (
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Filter</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Storage</th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {luts.map((lut) => (
-                <tr key={lut.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="font-medium text-gray-900">{lut.name}</div>
-                    <div className="text-xs text-gray-400">{new Date(lut.created_at).toLocaleDateString()}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className="bg-gray-100 px-2 py-1 rounded text-xs font-mono break-all">{lut.lut_url}</span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${lut.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
-                      {lut.is_active ? "Aktif" : "Nonaktif"}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end">
-                    <button
-                      onClick={() => toggleStatus(lut.id, lut.is_active)}
-                      className={`${lut.is_active ? "text-amber-600 hover:text-amber-900" : "text-green-600 hover:text-green-900"} mr-4`}
-                      title={lut.is_active ? "Matikan Filter" : "Aktifkan Filter"}
-                    >
-                      {lut.is_active ? <PowerOff className="w-5 h-5" /> : <Power className="w-5 h-5" />}
-                    </button>
-                    <button
-                      onClick={() => deleteLut(lut.id)}
-                      className="text-red-600 hover:text-red-900"
-                      title="Hapus Filter"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="w-full table-fixed divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="w-[28%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Filter</th>
+                  <th className="w-[42%] px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File Storage</th>
+                  <th className="w-[15%] px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="w-[15%] px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {luts.map((lut) => {
+                  const shortPath = `luts/${lut.id}.png`;
+                  const openUrl = lut.lut_url?.split("?")[0] || lut.lut_url;
+                  return (
+                    <tr key={lut.id}>
+                      <td className="px-6 py-4">
+                        <div className="font-medium text-gray-900 truncate">{lut.name}</div>
+                        <div className="text-xs text-gray-400">{new Date(lut.created_at).toLocaleDateString()}</div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-500">
+                        <a
+                          href={openUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={lut.lut_url}
+                          className="inline-block max-w-full truncate bg-gray-100 px-2 py-1 rounded text-xs font-mono text-pink-700 hover:text-pink-900 hover:underline"
+                        >
+                          {shortPath}
+                        </a>
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${lut.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                          {lut.is_active ? "Aktif" : "Nonaktif"}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right text-sm font-medium">
+                        <div className="inline-flex items-center justify-end gap-3">
+                          <button
+                            onClick={() => toggleStatus(lut.id, lut.is_active)}
+                            className={lut.is_active ? "text-amber-600 hover:text-amber-900" : "text-green-600 hover:text-green-900"}
+                            title={lut.is_active ? "Matikan Filter" : "Aktifkan Filter"}
+                          >
+                            {lut.is_active ? <PowerOff className="w-5 h-5" /> : <Power className="w-5 h-5" />}
+                          </button>
+                          <button
+                            onClick={() => deleteLut(lut.id)}
+                            className="text-red-600 hover:text-red-900"
+                            title="Hapus Filter"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
