@@ -1,8 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
-import { Loader2, Plus, Trash2, CheckCircle, XCircle } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { Loader2, Plus, Trash2, CheckCircle, XCircle } from "lucide-react";
 
 type PaperCategory = {
   id: string;
@@ -13,22 +12,26 @@ type PaperCategory = {
 export default function CategoriesPage() {
   const [categories, setCategories] = useState<PaperCategory[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newName, setNewName] = useState('');
+  const [newName, setNewName] = useState("");
   const [isAdding, setIsAdding] = useState(false);
 
   const fetchCategories = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('paper_categories')
-      .select('*')
-      .order('name');
-    
-    if (error) {
-      console.error('Error fetching categories:', error);
-    } else {
+    try {
+      const res = await fetch("/api/admin/categories");
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Gagal mengambil kategori");
+      }
+
       setCategories(data || []);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+      alert("Gagal mengambil data kategori");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -41,18 +44,21 @@ export default function CategoriesPage() {
 
     setIsAdding(true);
     try {
-      const { data, error } = await supabase
-        .from('paper_categories')
-        .insert({ name: newName.trim(), is_active: true })
-        .select()
-        .single();
+      const res = await fetch("/api/admin/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newName.trim() }),
+      });
+      const data = await res.json();
 
-      if (error) throw error;
-      
+      if (!res.ok) {
+        throw new Error(data.error || "Gagal menambahkan kategori");
+      }
+
       setCategories([...categories, data]);
-      setNewName('');
+      setNewName("");
     } catch (error: any) {
-      alert(error.message || 'Gagal menambahkan kategori');
+      alert(error.message || "Gagal menambahkan kategori");
     } finally {
       setIsAdding(false);
     }
@@ -61,17 +67,24 @@ export default function CategoriesPage() {
   const handleToggleActive = async (id: string, currentStatus: boolean) => {
     try {
       // Optimistic UI update
-      setCategories(categories.map(c => c.id === id ? { ...c, is_active: !currentStatus } : c));
-      
-      const { error } = await supabase
-        .from('paper_categories')
-        .update({ is_active: !currentStatus })
-        .eq('id', id);
+      setCategories(
+        categories.map((c) =>
+          c.id === id ? { ...c, is_active: !currentStatus } : c,
+        ),
+      );
 
-      if (error) throw error;
+      const res = await fetch(`/api/admin/categories/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !currentStatus }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Gagal mengubah status");
+      }
     } catch (error) {
-      console.error('Error toggling category:', error);
-      // Revert on error
+      console.error("Error toggling category:", error);
       fetchCategories();
     }
   };
@@ -80,40 +93,49 @@ export default function CategoriesPage() {
     if (!window.confirm(`Yakin ingin menghapus kategori "${name}"?`)) return;
 
     try {
-      const { error } = await supabase
-        .from('paper_categories')
-        .delete()
-        .eq('id', id);
+      const res = await fetch(`/api/admin/categories/${id}`, {
+        method: "DELETE",
+      });
+      const data = await res.json();
 
-      if (error) throw error;
-      setCategories(categories.filter(c => c.id !== id));
+      if (!res.ok) {
+        throw new Error(data.error || "Gagal menghapus kategori");
+      }
+
+      setCategories(categories.filter((c) => c.id !== id));
     } catch (error: any) {
-      alert(error.message || 'Gagal menghapus kategori');
+      alert(error.message || "Gagal menghapus kategori");
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-800">Manajemen Kategori Kertas</h1>
+        <h1 className="text-3xl font-bold text-slate-800">
+          Manajemen Kategori Kertas
+        </h1>
         <p className="text-slate-500 mt-1">
-          Buat ukuran kertas baru dan tentukan mana yang aktif tampil di aplikasi iPad.
+          Buat ukuran kertas baru dan tentukan mana yang aktif tampil di
+          aplikasi iPad.
         </p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        
         {/* Left: Add New */}
         <div className="md:col-span-1">
           <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
-            <h2 className="text-lg font-bold text-slate-800 mb-4">Tambah Kategori</h2>
+            <h2 className="text-lg font-bold text-slate-800 mb-4">
+              Tambah Kategori
+            </h2>
             <form onSubmit={handleAdd}>
               <div className="mb-4">
-                <label className="block text-sm font-semibold text-slate-700 mb-2">Nama Ukuran</label>
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Nama Ukuran
+                </label>
                 <input
                   type="text"
                   value={newName}
-                  onChange={e => setNewName(e.target.value)}
+                  onChange={(e) => setNewName(e.target.value)}
                   placeholder="e.g. 4x6 Standard"
                   className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-pink-500 outline-none bg-slate-50"
                   required
@@ -124,7 +146,11 @@ export default function CategoriesPage() {
                 disabled={isAdding}
                 className="w-full flex justify-center items-center gap-2 bg-slate-800 text-white py-2 rounded-xl font-semibold hover:bg-slate-700 transition-colors disabled:opacity-70"
               >
-                {isAdding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                {isAdding ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4" />
+                )}
                 Tambah
               </button>
             </form>
@@ -147,25 +173,38 @@ export default function CategoriesPage() {
                 <thead>
                   <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 text-sm">
                     <th className="p-4 font-semibold">Nama Kategori</th>
-                    <th className="p-4 font-semibold text-center">Status Aktif</th>
+                    <th className="p-4 font-semibold text-center">
+                      Status Aktif
+                    </th>
                     <th className="p-4 font-semibold text-right">Aksi</th>
                   </tr>
                 </thead>
                 <tbody>
                   {categories.map((cat) => (
-                    <tr key={cat.id} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="p-4 font-medium text-slate-800">{cat.name}</td>
+                    <tr
+                      key={cat.id}
+                      className="border-b border-slate-100 hover:bg-slate-50"
+                    >
+                      <td className="p-4 font-medium text-slate-800">
+                        {cat.name}
+                      </td>
                       <td className="p-4 text-center">
                         <button
-                          onClick={() => handleToggleActive(cat.id, cat.is_active)}
+                          onClick={() =>
+                            handleToggleActive(cat.id, cat.is_active)
+                          }
                           className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                            cat.is_active 
-                              ? 'bg-green-100 text-green-700 hover:bg-green-200' 
-                              : 'bg-slate-200 text-slate-600 hover:bg-slate-300'
+                            cat.is_active
+                              ? "bg-green-100 text-green-700 hover:bg-green-200"
+                              : "bg-slate-200 text-slate-600 hover:bg-slate-300"
                           }`}
                         >
-                          {cat.is_active ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
-                          {cat.is_active ? 'Aktif' : 'Nonaktif'}
+                          {cat.is_active ? (
+                            <CheckCircle className="w-4 h-4" />
+                          ) : (
+                            <XCircle className="w-4 h-4" />
+                          )}
+                          {cat.is_active ? "Aktif" : "Nonaktif"}
                         </button>
                       </td>
                       <td className="p-4 text-right">
@@ -184,7 +223,6 @@ export default function CategoriesPage() {
             )}
           </div>
         </div>
-
       </div>
     </div>
   );
