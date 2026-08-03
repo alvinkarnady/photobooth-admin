@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { getSupabaseBrowserClient } from "@/lib/supabase";
-import { Loader2, Plus, Trash2, Power, PowerOff, Upload } from "lucide-react";
+import { Loader2, Trash2, Power, PowerOff, Upload } from "lucide-react";
 
 interface LutFilter {
   id: string;
@@ -18,7 +17,6 @@ export default function LutManagerPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [filterName, setFilterName] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const supabase = getSupabaseBrowserClient();
 
   useEffect(() => {
     fetchLuts();
@@ -26,15 +24,16 @@ export default function LutManagerPage() {
 
   const fetchLuts = async () => {
     setIsLoading(true);
-    const { data, error } = await supabase
-      .from("lut_filters")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (!error && data) {
-      setLuts(data);
+    try {
+      const res = await fetch("/api/admin/luts");
+      if (!res.ok) throw new Error("Failed to fetch");
+      const data = await res.json();
+      setLuts(data || []);
+    } catch (error) {
+      console.error("Error fetching LUTs:", error);
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -52,7 +51,9 @@ export default function LutManagerPage() {
         const img = new Image();
         img.onload = () => {
           if (img.width !== 512 || img.height !== 512) {
-            alert(`Error: LUT harus berukuran tepat 512x512 piksel (Level 8 HALD LUT). Ukuran gambar Anda adalah ${img.width}x${img.height}.`);
+            alert(
+              `Error: LUT harus berukuran tepat 512x512 piksel (Level 8 HALD LUT). Ukuran gambar Anda adalah ${img.width}x${img.height}.`,
+            );
             resolve(false);
           } else {
             resolve(true);
@@ -71,57 +72,54 @@ export default function LutManagerPage() {
 
     setIsUploading(true);
     try {
-      // Generate a unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}.${fileExt}`;
+      const formData = new FormData();
+      formData.append("name", filterName.trim());
+      formData.append("file", file);
 
-      // Upload to storage
-      const { error: uploadError } = await supabase.storage
-        .from('luts')
-        .upload(fileName, file);
-
-      if (uploadError) throw uploadError;
-
-      // Insert into database
-      const { error: dbError } = await supabase
-        .from('lut_filters')
-        .insert([
-          { name: filterName.trim(), lut_url: fileName, is_active: true }
-        ]);
-
-      if (dbError) throw dbError;
+      const res = await fetch("/api/admin/luts", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Upload failed");
+      }
 
       setFilterName("");
       if (fileInputRef.current) fileInputRef.current.value = "";
       fetchLuts();
     } catch (error: any) {
-      alert("Gagal mengupload LUT: " + error.message);
+      alert("Gagal mengupload LUT: " + (error.message || "Unknown error"));
     } finally {
       setIsUploading(false);
     }
   };
 
   const toggleStatus = async (id: string, currentStatus: boolean) => {
-    const { error } = await supabase
-      .from('lut_filters')
-      .update({ is_active: !currentStatus })
-      .eq('id', id);
-    if (!error) fetchLuts();
+    try {
+      const res = await fetch(`/api/admin/luts/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ is_active: !currentStatus }),
+      });
+      if (!res.ok) throw new Error("Toggle failed");
+      fetchLuts();
+    } catch (error) {
+      console.error("Error toggling LUT:", error);
+    }
   };
 
-  const deleteLut = async (id: string, fileName: string) => {
+  const deleteLut = async (id: string) => {
     if (!confirm("Apakah Anda yakin ingin menghapus filter LUT ini?")) return;
-    
-    // Attempt to delete from storage first (ignoring errors if file is gone)
-    await supabase.storage.from('luts').remove([fileName]);
-    
-    // Delete from DB
-    const { error } = await supabase
-      .from('lut_filters')
-      .delete()
-      .eq('id', id);
-      
-    if (!error) fetchLuts();
+
+    try {
+      const res = await fetch(`/api/admin/luts/${id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Delete failed");
+      fetchLuts();
+    } catch (error) {
+      console.error("Error deleting LUT:", error);
+      alert("Gagal menghapus LUT");
+    }
   };
 
   return (
@@ -136,23 +134,23 @@ export default function LutManagerPage() {
       <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-end gap-4">
         <div className="flex-1">
           <label className="block text-sm font-medium text-gray-700 mb-1">Nama Filter Baru</label>
-          <input 
-            type="text" 
-            placeholder="Contoh: Cinematic Vintage" 
+          <input
+            type="text"
+            placeholder="Contoh: Cinematic Vintage"
             className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-pink-500 focus:border-pink-500"
             value={filterName}
             onChange={(e) => setFilterName(e.target.value)}
           />
         </div>
         <div>
-          <input 
-            type="file" 
+          <input
+            type="file"
             accept="image/png"
             ref={fileInputRef}
             onChange={handleFileUpload}
-            className="hidden" 
+            className="hidden"
           />
-          <button 
+          <button
             disabled={isUploading}
             onClick={() => fileInputRef.current?.click()}
             className="px-6 py-2 bg-pink-500 text-white rounded-xl font-medium hover:bg-pink-600 transition flex items-center gap-2 disabled:opacity-50"
@@ -190,23 +188,23 @@ export default function LutManagerPage() {
                     <div className="text-xs text-gray-400">{new Date(lut.created_at).toLocaleDateString()}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <span className="bg-gray-100 px-2 py-1 rounded text-xs font-mono">{lut.lut_url}</span>
+                    <span className="bg-gray-100 px-2 py-1 rounded text-xs font-mono break-all">{lut.lut_url}</span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
-                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${lut.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {lut.is_active ? 'Aktif' : 'Nonaktif'}
+                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${lut.is_active ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
+                      {lut.is_active ? "Aktif" : "Nonaktif"}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium flex justify-end">
-                    <button 
+                    <button
                       onClick={() => toggleStatus(lut.id, lut.is_active)}
-                      className={`${lut.is_active ? 'text-amber-600 hover:text-amber-900' : 'text-green-600 hover:text-green-900'} mr-4`}
+                      className={`${lut.is_active ? "text-amber-600 hover:text-amber-900" : "text-green-600 hover:text-green-900"} mr-4`}
                       title={lut.is_active ? "Matikan Filter" : "Aktifkan Filter"}
                     >
                       {lut.is_active ? <PowerOff className="w-5 h-5" /> : <Power className="w-5 h-5" />}
                     </button>
-                    <button 
-                      onClick={() => deleteLut(lut.id, lut.lut_url)}
+                    <button
+                      onClick={() => deleteLut(lut.id)}
                       className="text-red-600 hover:text-red-900"
                       title="Hapus Filter"
                     >

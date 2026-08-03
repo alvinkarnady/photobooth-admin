@@ -49,3 +49,37 @@ export async function deleteFrameAsset(id: string) {
     }),
   );
 }
+
+export function lutAssetKey(id: string) {
+  return `luts/${id}.png`;
+}
+
+export function lutAssetPublicUrl(id: string) {
+  return `${R2_PUBLIC_URL}/${lutAssetKey(id)}`;
+}
+
+export async function uploadLutAsset(
+  id: string,
+  body: Buffer,
+  contentType = 'image/png',
+) {
+  const key = lutAssetKey(id);
+  await r2Client.send(
+    new PutObjectCommand({
+      Bucket: R2_BUCKET_NAME,
+      Key: key,
+      Body: body,
+      ContentType: contentType,
+    }),
+  );
+  return `${lutAssetPublicUrl(id)}?v=${Date.now()}`;
+}
+
+export async function deleteLutAsset(id: string) {
+  await r2Client.send(
+    new DeleteObjectCommand({
+      Bucket: R2_BUCKET_NAME,
+      Key: lutAssetKey(id),
+    }),
+  );
+}
